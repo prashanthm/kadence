@@ -4,7 +4,7 @@ This prompt is the author-side complement to `pr-review-loop.prompt.md` (reviewe
 
 ## Inputs
 
-- Config path (`PR_FIX_CONFIG` or `~/.config/ai-sdlc/pr-comment-fix-loop.yaml`): `github_user`, `repos[]`, `min_reviewer_feedback`, `exclude_reviewers`, `max_files_changed`, `max_rounds`, `labels` (incl. `needs_human`), `state_log`, `git.primary_clone`, `git.worktree_root`, `report.submit`, `report.draft_path`, `report.branch_draft_dir`, `max_items_per_firing`.
+- Config path (`PR_FIX_CONFIG` or `~/.config/kadence/pr-comment-fix-loop.yaml`): `github_user`, `repos[]`, `min_reviewer_feedback`, `exclude_reviewers`, `max_files_changed`, `max_rounds`, `labels` (incl. `needs_human`), `state_log`, `git.primary_clone`, `git.worktree_root`, `report.submit`, `report.draft_path`, `report.branch_draft_dir`, `max_items_per_firing`.
 - Env: `PR_FIX_REPORT_DRAFT=1` forces draft report mode (same as `report.submit: false`).
 - Scripts (repo-relative to `$TOOLKIT_ROOT`, the toolkit's own root — this is a standalone
   repo, not a product-workspace subdirectory): `discover_pr_fix_candidates.py`,
@@ -116,17 +116,17 @@ git add -A && git commit -m "fix(pr-<N>): address review feedback"
 git push origin HEAD
 ```
 
-Write `~/.local/share/ai-sdlc/pr-fix-reports/<repo>-<pr>-meta.json` with `worktree` path when staying local-only.
+Write `~/.local/share/kadence/pr-fix-reports/<repo>-<pr>-meta.json` with `worktree` path when staying local-only.
 
 ## Draft report mode (`report.submit: false` or `PR_FIX_REPORT_DRAFT=1`)
 
 Worktree + local commits run; **nothing hits GitHub** until the operator publishes.
 
 1. Write report using `templates/pr-comment-fix-report.md` with header: `> **DRAFT** — not yet posted to PR conversation`
-2. Include **AI Attribution** (Author row: configured `agent_backend` / `agent_model` — Tool is `Cursor`, `GitHub Copilot`, or `Claude Code`)
+2. Include **AI Attribution** (Author row: configured `agent_backend` / `agent_model` — Tool is `Claude Code`)
 3. Commit to `<branch_draft_dir>/<pr>-draft.md` in the worktree (included in human push)
 4. Write firing evidence: `<branch_draft_dir>/<pr>-firing-latest.md` and `<pr>-firing-<ISO8601>.json` (cron backfills if omitted)
-5. Copy draft to `~/.local/share/ai-sdlc/pr-fix-reports/<repo>-<pr>-draft.md`
+5. Copy draft to `~/.local/share/kadence/pr-fix-reports/<repo>-<pr>-draft.md`
 6. **Do not** `git push`, **do not** `gh pr comment`, **do not** apply labels, **do not** re-request reviewers
 7. End with operator steps:
 

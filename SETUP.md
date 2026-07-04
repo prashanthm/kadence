@@ -81,8 +81,8 @@ you need — most adopters want all four:
 with `--loop`:
 
 ```
-cp skills/engineering-work-loop/config.example.yaml ~/.config/ai-sdlc/spec-loop.yaml
-cp skills/engineering-work-loop/config.example.yaml ~/.config/ai-sdlc/implement-loop.yaml
+cp skills/engineering-work-loop/config.example.yaml ~/.config/kadence/spec-loop.yaml
+cp skills/engineering-work-loop/config.example.yaml ~/.config/kadence/implement-loop.yaml
 # set repos[].clone_path in each; spec-loop gates on "Ready for Spec", implement-loop on "Ready for Dev"
 scripts/engineering-work-loop-setup.sh --loop spec-loop install
 scripts/engineering-work-loop-setup.sh --loop implement-loop install
@@ -92,8 +92,8 @@ scripts/engineering-work-loop-setup.sh --loop implement-loop install
 engine):
 
 ```
-cp skills/pr-review-loop/config.example.yaml ~/.config/ai-sdlc/pr-review-loop.yaml
-cp skills/pr-comment-fix-loop/config.example.yaml ~/.config/ai-sdlc/pr-comment-fix-loop.yaml
+cp skills/pr-review-loop/config.example.yaml ~/.config/kadence/pr-review-loop.yaml
+cp skills/pr-comment-fix-loop/config.example.yaml ~/.config/kadence/pr-comment-fix-loop.yaml
 # set github_user + repos[] in each
 scripts/pr-review-loop-setup.sh install
 scripts/pr-comment-fix-loop-setup.sh install

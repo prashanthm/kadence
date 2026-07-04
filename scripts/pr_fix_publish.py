@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
 from pr_fix_attribution import ensure_attribution_in_report
 from pr_fix_config import report_apply_labels, report_push, report_submit
 
@@ -105,12 +106,12 @@ def prepare_publish_artifacts(
     worktree_path: str | None = None,
 ) -> dict[str, Any]:
     report = cfg.get("report") or {}
-    draft_dir = str(report.get("draft_path", "~/.local/share/ai-sdlc/pr-fix-reports"))
+    draft_dir = str(report.get("draft_path", f"~/.local/share/{app_namespace()}/pr-fix-reports"))
     repo_slug = repo.split("/", 1)[-1]
     labels = cfg.get("labels") or {}
     git = cfg.get("git") or {}
     wt = worktree_path or default_worktree_path(
-        str(git.get("worktree_root", "~/.local/share/ai-sdlc/worktrees")),
+        str(git.get("worktree_root", f"~/.local/share/{app_namespace()}/worktrees")),
         repo_slug,
         pr_number,
     )
@@ -151,7 +152,7 @@ def prepare_publish_artifacts(
         "push_pending": not report_push(cfg),
         "comment_pending": not report_submit(cfg),
         "labels_pending": not report_apply_labels(cfg),
-        "agent_backend": cfg.get("agent_backend", "cursor"),
+        "agent_backend": cfg.get("agent_backend", "claude"),
         "agent_model": cfg.get("agent_model", ""),
     }
     meta_file.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")

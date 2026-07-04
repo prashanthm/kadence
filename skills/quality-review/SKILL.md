@@ -27,7 +27,7 @@ Verify PR meets quality bar: tests cover changed behavior, ACs satisfied, no obv
 5. Findings by severity; checklist pass/fail.
 6. Write to `initiatives/<name>/.sdlc/reviews/<pr>-quality.md`.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

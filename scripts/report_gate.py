@@ -33,6 +33,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from loop_registry import app_namespace
+
 
 def parse_skill_used(report: str) -> str | None:
     """Extract the required `Skill used` field value from the report table."""
@@ -69,8 +71,11 @@ _PII_PATTERNS = (
     re.compile(r"/Users/[^\s/`'\"]+"),          # macOS home: /Users/<name>
     re.compile(r"/home/[^\s/`'\"]+"),           # Linux home: /home/<name>
     re.compile(r"[A-Za-z]:\\Users\\[^\s\\`'\"]+"),  # Windows: C:\Users\<name>
-    re.compile(r"~/\.local/share/ai-sdlc\b"),   # a worktree/state path
-    re.compile(r"\.local/share/ai-sdlc/worktrees\b"),
+    # State/worktree path. Match the active namespace AND the legacy 'ai-sdlc'
+    # (defense-in-depth: reports authored on a legacy layout, or with
+    # KADENCE_NAMESPACE=ai-sdlc, must still be scrubbed).
+    re.compile(rf"~/\.local/share/(?:{re.escape(app_namespace())}|ai-sdlc)\b"),
+    re.compile(rf"\.local/share/(?:{re.escape(app_namespace())}|ai-sdlc)/worktrees\b"),
 )
 
 

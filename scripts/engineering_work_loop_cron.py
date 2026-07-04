@@ -30,8 +30,9 @@ def _lock_path() -> Path:
     runs at a time. Manual force-fires and the scheduled cron then can't collide on
     the same worktree/branch (the #122 collision). Derives from loop_stem()."""
     from engineering_work_loop_config import loop_stem
+    from loop_registry import app_namespace
 
-    d = Path.home() / ".local/share/ai-sdlc"
+    d = Path.home() / f".local/share/{app_namespace()}"
     return d / f"{loop_stem()}.lock"
 
 
@@ -133,9 +134,9 @@ def run_agent_with_fallback(
     from engineering_work_loop_config import load_config
 
     # Honor the OPERATOR's configured backend FIRST, then fall through to the rest of
-    # the chain on failure. Without this the loop always tried cursor first (chain[0])
-    # and AGENT_BACKEND_OVERRIDE clobbered the config — so `agent_backend: claude` ran
-    # cursor. Configured backend leads; the remaining chain is the fallback order.
+    # the chain on failure. Claude is the only backend today, so the chain has a single
+    # entry and this degenerates to "try claude once"; the structure is kept so a future
+    # backend can be reintroduced without reworking the fallback flow.
     try:
         configured = str(load_config(config_path).get("agent_backend", "")).lower().strip()
     except Exception:

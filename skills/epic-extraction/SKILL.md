@@ -132,7 +132,7 @@ Options:
   C) Draft at Low confidence — you accept the caveat that the capability is not code-confirmed
 ```
 
-2. Use `AskQuestion` tool when in Cursor. In non-interactive environments, output the gap block as plaintext and wait for the next message.
+2. Use `AskQuestion` tool when available (interactive IDE). In non-interactive environments, output the gap block as plaintext and wait for the next message.
 3. Do not draft the epic until the user responds.
 4. If the user provides a source: read it, add the evidence entry to the ledger (with a new EV-id), then draft the epic.
 5. If the user skips: log the candidate title in an `## Epic Candidates (Unconfirmed)` section in the epic index. Do not write a file for it.

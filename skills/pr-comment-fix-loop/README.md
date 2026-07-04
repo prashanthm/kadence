@@ -9,7 +9,7 @@ Agent workflow rules: [SKILL.md](SKILL.md). Fix agent backends: [loop-agent-back
 ## Prerequisites
 
 - `gh auth login`
-- **Cursor:** `agent login` (default backend), **Copilot:** `copilot login`, or **Claude:** `claude setup-token` (sets `CLAUDE_CODE_OAUTH_TOKEN`) — set `agent_backend` in operator overlay
+- **Claude:** `claude auth login` (stored session) or `claude setup-token` (sets `CLAUDE_CODE_OAUTH_TOKEN` for headless) — the only backend
 - Git primary clone (auto-detected on install)
 
 See [loop-agent-backends.md](../../standard/loop-agent-backends.md) for install links.
@@ -22,7 +22,7 @@ scripts/pr-comment-fix-loop-setup.sh run
 scripts/pr-comment-fix-loop-setup.sh status
 ```
 
-`install` checks CLI login, creates local dirs, writes operator config overlay (merged with toolkit defaults), installs launchd **every 15 min** (:00/:15/:30/:45), and runs one smoke firing. Each successful run **pushes fixes, posts the PR comment, applies labels, and re-requests reviewers** when configured (default). Mac must be awake and you logged in for scheduled runs. A firing still in progress when the next tick arrives is **skipped** (single-instance lock at `~/.local/share/ai-sdlc/pr-comment-fix-loop.lock`), so slow firings never stack.
+`install` checks CLI login, creates local dirs, writes operator config overlay (merged with toolkit defaults), installs launchd **every 15 min** (:00/:15/:30/:45), and runs one smoke firing. Each successful run **pushes fixes, posts the PR comment, applies labels, and re-requests reviewers** when configured (default). Mac must be awake and you logged in for scheduled runs. A firing still in progress when the next tick arrives is **skipped** (single-instance lock at `~/.local/share/kadence/pr-comment-fix-loop.lock`), so slow firings never stack.
 
 To pick up new defaults from the toolkit without losing your overrides:
 
@@ -30,7 +30,7 @@ To pick up new defaults from the toolkit without losing your overrides:
 scripts/pr-comment-fix-loop-setup.sh install --refresh-config --skip-launchd --skip-smoke
 ```
 
-To reset a bloated overlay back to the minimal operator file, delete `~/.config/ai-sdlc/pr-comment-fix-loop.yaml` and re-run `install`.
+To reset a bloated overlay back to the minimal operator file, delete `~/.config/kadence/pr-comment-fix-loop.yaml` and re-run `install`.
 
 Manual agent run (outside cron):
 
@@ -42,8 +42,8 @@ scripts/pr-comment-fix-loop.sh
 
 | Path | Location | In git? | Purpose |
 |------|----------|---------|---------|
-| `~/.config/ai-sdlc/pr-comment-fix-loop.yaml` | Your machine | No | Operator overlay (`github_user`, `primary_clone`, `agent_backend`) |
-| `~/.local/share/ai-sdlc/` | Your machine | No | Worktrees, draft reports, status logs, cron log |
+| `~/.config/kadence/pr-comment-fix-loop.yaml` | Your machine | No | Operator overlay (`github_user`, `primary_clone`, `agent_backend`) |
+| `~/.local/share/kadence/` | Your machine | No | Worktrees, draft reports, status logs, cron log |
 | `.sdlc/pr-fix-reports/` | Repo / PR branch | Yes | Firing evidence after publish |
 
 Toolkit defaults (versioned, auto-merged): `skills/pr-comment-fix-loop/config.example.yaml`
@@ -52,7 +52,7 @@ Toolkit defaults (versioned, auto-merged): `skills/pr-comment-fix-loop/config.ex
 
 | Key | Purpose |
 |-----|---------|
-| `agent_backend` | `cursor`, `copilot`, or `claude` (set in operator overlay) |
+| `agent_backend` | `claude` (the only backend) |
 | `agent_model` | Optional model for AI Attribution Author row |
 | `report.submit/push/apply_labels` | Default `true` — full publish at end of run; set `false` for draft-only |
 | `min_reviewer_feedback` | Threshold (default 2 non-operator reviews) |
@@ -74,7 +74,7 @@ report:
   apply_labels: false
 ```
 
-Then review artifacts under `~/.local/share/ai-sdlc/pr-fix-reports/` and publish manually:
+Then review artifacts under `~/.local/share/kadence/pr-fix-reports/` and publish manually:
 
 ```bash
 PR_FIX_PUBLISH=1 scripts/pr-comment-fix-loop-publish.sh <pr>
@@ -87,6 +87,6 @@ PR_FIX_PUBLISH=1 scripts/pr-comment-fix-loop-publish.sh <pr>
 | `pr-comment-fix-loop-setup.sh` | **Install / run / status** (start here) |
 | `pr-comment-fix-loop-cron.sh` | Scheduled entrypoint (called by launchd) |
 | `pr-comment-fix-loop.sh` | Manual agent run |
-| `invoke_loop_agent.sh` | Cursor/Copilot dispatcher |
+| `invoke_loop_agent.sh` | Claude Code dispatcher |
 | `pr-comment-fix-loop-submit.sh` | Prepare or publish report |
 | `pr-comment-fix-loop-publish.sh` | Manual publish gate (`PR_FIX_PUBLISH=1`, draft mode) |

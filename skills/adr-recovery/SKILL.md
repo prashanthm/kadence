@@ -137,7 +137,7 @@ Options:
   C) Mark it Low confidence and draft with what I have — you accept the caveat
 ```
 
-2. Use `AskQuestion` tool when in Cursor. In non-interactive environments, output the gap block as plaintext and wait for the next message.
+2. Use `AskQuestion` tool when available (interactive IDE). In non-interactive environments, output the gap block as plaintext and wait for the next message.
 3. Do not draft the ADR until the user responds.
 4. If the user provides a source: read it, add the evidence entry to the ledger (with a new EV-id), then draft the ADR.
 5. If the user skips: log the candidate title and unanswered question in an `## ADR Candidates (Unconfirmed)` section at the end of the ADR index file. Do not write a file for it.

@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from engineering_work_loop_config import expand_path
+from loop_registry import app_namespace
 
 
 def status_paths(cfg: dict[str, Any]) -> dict[str, Path]:
@@ -16,7 +17,7 @@ def status_paths(cfg: dict[str, Any]) -> dict[str, Path]:
             expand_path(
                 st.get(
                     "latest_json",
-                    "~/.local/share/ai-sdlc/engineering-work-loop-latest.json",
+                    f"~/.local/share/{app_namespace()}/engineering-work-loop-latest.json",
                 )
             )
         ),
@@ -24,7 +25,7 @@ def status_paths(cfg: dict[str, Any]) -> dict[str, Path]:
             expand_path(
                 st.get(
                     "latest_md",
-                    "~/.local/share/ai-sdlc/engineering-work-loop-latest.md",
+                    f"~/.local/share/{app_namespace()}/engineering-work-loop-latest.md",
                 )
             )
         ),
@@ -32,7 +33,7 @@ def status_paths(cfg: dict[str, Any]) -> dict[str, Path]:
             expand_path(
                 st.get(
                     "firing_log",
-                    "~/.local/share/ai-sdlc/engineering-work-loop-firings.log",
+                    f"~/.local/share/{app_namespace()}/engineering-work-loop-firings.log",
                 )
             )
         ),
@@ -259,7 +260,7 @@ def append_state_log_entry(
     re-pickable on every firing.
     """
     path = expand_path(
-        str(cfg.get("state_log", "~/.local/share/ai-sdlc/engineering-work-loop.log"))
+        str(cfg.get("state_log", f"~/.local/share/{app_namespace()}/engineering-work-loop.log"))
     )
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)

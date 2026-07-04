@@ -3,7 +3,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG="${PR_FIX_CONFIG:-$HOME/.config/ai-sdlc/pr-comment-fix-loop.yaml}"
+NS="${KADENCE_NAMESPACE:-kadence}"
+CONFIG="${PR_FIX_CONFIG:-$HOME/.config/${NS}/pr-comment-fix-loop.yaml}"
 MODE="auto"
 PR_NUM=""
 REPO="prashanthm/product-workspace"

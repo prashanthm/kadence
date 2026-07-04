@@ -22,8 +22,7 @@ Install options (pass after install):
   --skip-smoke       Do not run cron after install
 
 Examples:
-  agent login                  # once, before install (Cursor)
-  copilot login                # once, before install (Copilot)
+  claude auth login            # once, before install (Claude Code)
   pr-comment-fix-loop-setup.sh install
   pr-comment-fix-loop-setup.sh run
   pr-comment-fix-loop-setup.sh status

@@ -39,7 +39,7 @@ def _patch(monkeypatch_like, candidates, run_agent_impl):
         code, out = run_agent_impl(
             sd, cp, force_issue=force_issue, clone_path=clone_path, base_ref=base_ref
         )
-        return code, out, "cursor"
+        return code, out, "claude"
 
     cron.run_agent_with_fallback = fallback_adapter
     cron.write_firing_report = lambda cfg, rep: None
@@ -136,25 +136,24 @@ def _fallback_calls(monkeypatch, configured_backend, succeed_on):
 
 
 def test_configured_backend_leads_the_chain(monkeypatch):
-    # agent_backend: claude must be TRIED FIRST — not overridden by the cursor-first
-    # fallback chain (the bug that ran cursor when config said claude).
+    # Claude is the only backend; it is tried first and succeeds.
     calls, code, used = _fallback_calls(monkeypatch, "claude", succeed_on="claude")
     assert calls[0] == "claude"
     assert code == 0 and used == "claude"
 
 
-def test_fallback_after_configured_backend_fails(monkeypatch):
-    # configured claude leads; on its failure the next chain backend (cursor) is tried
-    # and succeeds, so the loop stops there (copilot not reached).
-    calls, code, used = _fallback_calls(monkeypatch, "claude", succeed_on="cursor")
-    assert calls == ["claude", "cursor"]  # claude first (configured), then fallback
-    assert code == 0 and used == "cursor"
+def test_claude_only_chain_when_backend_fails(monkeypatch):
+    # Claude is the only backend, so a failing firing has nothing to fall through to:
+    # the chain is exactly ["claude"] and the loop reports that failure.
+    calls, code, used = _fallback_calls(monkeypatch, "claude", succeed_on="none")
+    assert calls == ["claude"]
+    assert code != 0 and used == "claude"
 
 
 def test_default_chain_when_no_configured_backend(monkeypatch):
-    # empty/unknown configured backend -> the default chain order is used.
+    # empty/unknown configured backend -> the default (claude-only) chain is used.
     calls, code, used = _fallback_calls(monkeypatch, "", succeed_on="claude")
-    assert calls == ["cursor", "copilot", "claude"]
+    assert calls == ["claude"]
     assert code == 0 and used == "claude"
 
 

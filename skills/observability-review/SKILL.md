@@ -25,7 +25,7 @@ Verify new code paths include planned instrumentation per Tier 2 observability A
 3. Flag missing instrumentation with suggested fix.
 4. Write to `initiatives/<name>/.sdlc/reviews/<pr>-observability.md`.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

@@ -29,8 +29,8 @@ Describe what changed and why.
 <!-- Agents: fill in the model and tool used for each role. Use "—" if human-only. -->
 | Role | Model | Tool |
 |------|-------|------|
-| Author | <!-- e.g. claude-sonnet-4-5 --> | <!-- e.g. GitHub Copilot / Cursor / Claude Code --> |
-| Spec | <!-- e.g. claude-sonnet-4-5 --> | <!-- e.g. GitHub Copilot --> |
+| Author | <!-- e.g. claude-opus-4-8 --> | <!-- Claude Code --> |
+| Spec | <!-- e.g. claude-opus-4-8 --> | <!-- Claude Code --> |
 | Reviewer | <!-- e.g. — --> | <!-- e.g. — --> |
 
 ## Related Issues

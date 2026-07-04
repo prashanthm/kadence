@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """The loop registry — the shared engine's descriptor for each named loop.
 
-`engineering-work-loop` is the **family** of four peer loops, all thin descriptors
-over one shared engine (discovery, worktree, verify, report gate, config, cron/
-launchd/Task-Scheduler install). A "loop" is fully described by:
+`kloop` is the **family** of four peer loops (legacy name: `engineering-work-loop`,
+still accepted), all thin descriptors over one shared engine (discovery, worktree,
+verify, report gate, config, cron/launchd/Task-Scheduler install). A "loop" is fully
+described by:
 
   name           the loop's identity — drives the cron label, config file, and
-                 state paths (com.ai-sdlc[.<inst>].<name>, <name>[-<inst>].yaml, ...)
+                 state paths (com.<namespace>[.<inst>].<name>, <name>[-<inst>].yaml, ...)
   prompt         the agent prompt file under .github/prompts/ (what the loop does)
   skill          the skill the prompt routes through (validated by report_gate)
   status_gate    the default Project Status this loop picks up (may be overridden
@@ -24,6 +25,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+
+
+def app_namespace() -> str:
+    """The toolkit's filesystem/label namespace. Env override KADENCE_NAMESPACE,
+    else 'kadence'. Every ~/.config, ~/.local/share, launchd-label, and
+    Windows-task-name construction routes through this so the brand lives in one
+    place. A legacy operator can keep the old layout with KADENCE_NAMESPACE=ai-sdlc."""
+    return os.environ.get("KADENCE_NAMESPACE", "").strip() or "kadence"
 
 
 @dataclass(frozen=True)
@@ -77,8 +86,13 @@ LOOPS: dict[str, LoopDescriptor] = {
 }
 
 # The family umbrella name (not a concrete loop) + the default concrete loop for
-# bare invocations (backward compatibility with the former single loop).
-FAMILY_NAME = "engineering-work-loop"
+# bare invocations (backward compatibility with the former single loop). 'kloop' is
+# the current brand for the four-loop family; 'engineering-work-loop' is the legacy
+# family name kept as an alias so old installs/labels/env values keep resolving. The
+# concrete cron scripts and ENGINEERING_LOOP_* env vars still carry the legacy stem
+# (they are load-bearing in the installed plists); only the family *name* is rebranded.
+FAMILY_NAME = "kloop"
+LEGACY_FAMILY_NAME = "engineering-work-loop"
 DEFAULT_LOOP = "implement-loop"
 
 # The loops the shared engine (engineering-work-loop.sh / setup) actually runs.
@@ -92,13 +106,14 @@ def is_engine_driven(name: str) -> bool:
 def resolve_loop_name(explicit: str | None = None) -> str:
     """Resolve the active loop: explicit arg > ENGINEERING_LOOP_NAME env > default.
 
-    The legacy family name 'engineering-work-loop' resolves to the default concrete
-    loop (implement-loop) so old installs/labels keep working.
+    The family name — 'kloop' or the legacy 'engineering-work-loop' — resolves to the
+    default concrete loop (implement-loop) so both the current brand and old
+    installs/labels keep working.
     """
     name = (explicit or os.environ.get("ENGINEERING_LOOP_NAME", "") or "").strip()
     if not name:
         return DEFAULT_LOOP
-    if name == FAMILY_NAME:
+    if name in (FAMILY_NAME, LEGACY_FAMILY_NAME):
         return DEFAULT_LOOP
     return name
 
@@ -114,9 +129,11 @@ def get_loop(name: str | None = None) -> LoopDescriptor:
 
 
 __all__ = [
+    "app_namespace",
     "LoopDescriptor",
     "LOOPS",
     "FAMILY_NAME",
+    "LEGACY_FAMILY_NAME",
     "DEFAULT_LOOP",
     "ENGINE_DRIVEN",
     "resolve_loop_name",

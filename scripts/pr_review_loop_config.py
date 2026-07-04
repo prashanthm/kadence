@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
 from pr_fix_config import (
     _load_raw,
     deep_merge,
@@ -30,7 +31,7 @@ def toolkit_example_path(root: Path | None = None) -> Path:
 
 
 def operator_overlay_path() -> Path:
-    return Path.home() / ".config/ai-sdlc" / OVERLAY_NAME
+    return Path.home() / f".config/{app_namespace()}" / OVERLAY_NAME
 
 
 def resolve_config_path() -> Path:
@@ -80,7 +81,7 @@ def _normalize_config(cfg: dict[str, Any]) -> dict[str, Any]:
         cfg["adjacent_reviewers"] = []
     cfg.setdefault("defer_to_ci", True)
     cfg.setdefault(
-        "state_log", "~/.local/share/ai-sdlc/pr-review-loop.log"
+        "state_log", f"~/.local/share/{app_namespace()}/pr-review-loop.log"
     )
     labels = cfg.get("labels") or {}
     if not isinstance(labels, dict):
@@ -101,13 +102,13 @@ def _normalize_config(cfg: dict[str, Any]) -> dict[str, Any]:
     if isinstance(status, dict):
         cfg["status"] = {
             "latest_json": status.get(
-                "latest_json", "~/.local/share/ai-sdlc/pr-review-loop-latest.json"
+                "latest_json", f"~/.local/share/{app_namespace()}/pr-review-loop-latest.json"
             ),
             "latest_md": status.get(
-                "latest_md", "~/.local/share/ai-sdlc/pr-review-loop-latest.md"
+                "latest_md", f"~/.local/share/{app_namespace()}/pr-review-loop-latest.md"
             ),
             "firing_log": status.get(
-                "firing_log", "~/.local/share/ai-sdlc/pr-review-loop-firings.log"
+                "firing_log", f"~/.local/share/{app_namespace()}/pr-review-loop-firings.log"
             ),
         }
     from loop_agent_config import normalize_agent_config

@@ -16,7 +16,8 @@ CONFIG_STEM="$("${PYTHON_CMD[@]}" -c "
 import sys; sys.path.insert(0, '$SCRIPT_DIR')
 from loop_registry import resolve_loop_name
 print(resolve_loop_name('$LOOP_NAME'))" 2>/dev/null || echo implement-loop)"
-CONFIG="${ENGINEERING_LOOP_CONFIG:-$HOME/.config/ai-sdlc/${CONFIG_STEM}.yaml}"
+NS="${KADENCE_NAMESPACE:-kadence}"
+CONFIG="${ENGINEERING_LOOP_CONFIG:-$HOME/.config/${NS}/${CONFIG_STEM}.yaml}"
 
 # Prompt: ENGINEERING_LOOP_PROMPT (from the cron descriptor) wins; else the loop's
 # default prompt. A bare filename resolves under .github/prompts/.

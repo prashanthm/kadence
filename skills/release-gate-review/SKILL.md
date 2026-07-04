@@ -27,7 +27,7 @@ Verify release meets [`checklists/release-gate.md`](../../checklists/release-gat
 4. Write to `initiatives/<slug>/.sdlc/release-review.md`.
 5. Request PO + Builder ship approval — do not deploy.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

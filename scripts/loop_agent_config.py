@@ -1,25 +1,21 @@
-"""Shared loop agent backend config (Cursor | Copilot | Claude)."""
+"""Shared loop agent backend config (Claude Code — the only backend)."""
 from __future__ import annotations
 
 from typing import Any
 
-VALID_BACKENDS = frozenset({"cursor", "copilot", "claude"})
+VALID_BACKENDS = frozenset({"claude"})
 
 DEFAULT_CMD: dict[str, str] = {
-    "cursor": "agent",
-    "copilot": "copilot",
     "claude": "claude",
 }
 
 TOOL_NAMES: dict[str, str] = {
-    "cursor": "Cursor",
-    "copilot": "GitHub Copilot",
     "claude": "Claude Code",
 }
 
-# Runtime fallback order: try cursor first, fall through to copilot, then claude
-# when a firing fails (rate limit, auth, transient API error, etc.).
-BACKEND_FALLBACK_CHAIN: tuple[str, ...] = ("cursor", "copilot", "claude")
+# Runtime fallback order. Claude is the only backend, so the chain is a single
+# entry — a firing tries claude once (no cross-tool fallback).
+BACKEND_FALLBACK_CHAIN: tuple[str, ...] = ("claude",)
 
 
 def cmd_for_backend(backend: str, cfg: dict[str, Any] | None = None) -> str:
@@ -34,9 +30,9 @@ def cmd_for_backend(backend: str, cfg: dict[str, Any] | None = None) -> str:
 
 
 def normalize_agent_config(cfg: dict[str, Any]) -> dict[str, Any]:
-    backend = str(cfg.get("agent_backend", "cursor")).lower().strip()
+    backend = str(cfg.get("agent_backend", "claude")).lower().strip()
     if backend not in VALID_BACKENDS:
-        backend = "cursor"
+        backend = "claude"
     cfg["agent_backend"] = backend
     cfg.setdefault("agent_model", str(cfg.get("agent_model") or ""))
     if not cfg.get("agent_cmd"):
@@ -45,7 +41,7 @@ def normalize_agent_config(cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def agent_tool_name(cfg: dict[str, Any]) -> str:
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
+    backend = str(cfg.get("agent_backend", "claude")).lower()
     return TOOL_NAMES.get(backend, backend)
 
 

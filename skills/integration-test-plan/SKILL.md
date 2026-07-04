@@ -28,7 +28,7 @@ Define integration test scenarios that verify features work together against rel
 4. Write plan to `initiatives/<name>/.sdlc/integration-test-plan.md`.
 5. Update manifest `release.integration_plan_path`.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

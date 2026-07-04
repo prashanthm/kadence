@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Append-only structured event log for the engineering work loop (v2).
 
-Every loop action emits one JSONL line to ``~/.local/share/ai-sdlc/events/<repo>.jsonl``.
+Every loop action emits one JSONL line to ``~/.local/share/<namespace>/events/<repo>.jsonl``.
 This makes loop behaviour observable without mining transcripts and is the substrate
 for the anti-reward-hack checks (independent verify, diff-vs-claim): outcomes are
 recorded here, not inferred from an agent's self-report.
@@ -28,6 +28,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
+
 # Canonical vocabulary. Kept small and explicit so the summary and downstream
 # report never have to guess. Unknown values are allowed (recorded verbatim) but
 # these are the ones the loop should emit.
@@ -44,7 +46,7 @@ ACTIONS = (
 )
 OUTCOMES = ("pr", "metadata", "none", "blocked", "rejected")
 
-DEFAULT_EVENTS_DIR = "~/.local/share/ai-sdlc/events"
+DEFAULT_EVENTS_DIR = f"~/.local/share/{app_namespace()}/events"
 
 
 def expand_path(p: str) -> str:

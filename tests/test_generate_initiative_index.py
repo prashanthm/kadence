@@ -149,7 +149,7 @@ def test_parse_product_brief_epic_phases_v2_slug_convention_table(tmp_path):
         "| Slug | Epic | Description | Phase |\n"
         "|------|------|-------------|-------|\n"
         "| [`loop-enforcement`](epics/loop-enforcement.md) | Loop Enforcement "
-        "| ai-sdlc doctor | v2 (first) |\n",
+        "| kadence doctor | v2 (first) |\n",
         encoding="utf-8",
     )
     result = parse_product_brief_epic_phases(brief)

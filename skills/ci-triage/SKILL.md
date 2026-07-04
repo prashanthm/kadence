@@ -30,7 +30,7 @@ Investigate failing CI checks, classify root cause, and either propose a fix pla
 5. Re-run failed commands locally if possible.
 6. Return triage report with status fixed|blocked|needs-scope-change.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

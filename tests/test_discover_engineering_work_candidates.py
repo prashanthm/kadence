@@ -162,7 +162,7 @@ def test_append_state_log_round_trip(tmp_path):
     append_state_log_entry(cfg, owner="your-org", repo="product-workspace",
                            number=241, outcome="agent_complete")
     state = read_state_log(str(log))
-    key = "prashanthm/product-workspace#241"
+    key = "your-org/product-workspace#241"
     assert key in state
     assert cooldown_active(key, state, 24) is True
 

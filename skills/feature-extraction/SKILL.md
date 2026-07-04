@@ -137,7 +137,7 @@ Options:
   C) Draft at Low confidence — you accept the caveat that the behavior is not code-confirmed
 ```
 
-2. Use `AskQuestion` tool when in Cursor. In non-interactive environments, output the gap block as plaintext and wait for the next message.
+2. Use `AskQuestion` tool when available (interactive IDE). In non-interactive environments, output the gap block as plaintext and wait for the next message.
 3. Do not draft the feature until the user responds.
 4. If the user provides a source: read it, add the evidence entry to the ledger (with a new EV-id), then draft the feature.
 5. If the user skips: log the candidate in an `## Feature Candidates (Unconfirmed)` section in the feature index. Do not write a file for it.

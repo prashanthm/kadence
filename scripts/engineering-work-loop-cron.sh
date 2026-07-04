@@ -18,7 +18,8 @@ resolve_python
 # Instance-aware: ENGINEERING_LOOP_INSTANCE suffixes the lock so a v2 instance never
 # blocks (or is blocked by) the default instance. Empty = default (v1-compatible).
 _INST="${ENGINEERING_LOOP_INSTANCE:+-${ENGINEERING_LOOP_INSTANCE}}"
-LOCK_DIR="${ENGINEERING_LOOP_LOCK_DIR:-${HOME}/.local/share/ai-sdlc/engineering-work-loop${_INST}.lock}"
+NS="${KADENCE_NAMESPACE:-kadence}"
+LOCK_DIR="${ENGINEERING_LOOP_LOCK_DIR:-${HOME}/.local/share/${NS}/engineering-work-loop${_INST}.lock}"
 LOCK_STALE_MIN="${ENGINEERING_LOOP_LOCK_STALE_MIN:-120}"
 mkdir -p "$(dirname "$LOCK_DIR")"
 if [[ -d "$LOCK_DIR" ]]; then

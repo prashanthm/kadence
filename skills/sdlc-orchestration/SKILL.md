@@ -1,6 +1,6 @@
 ---
 name: sdlc-orchestration
-description: Coordinate the lean v2 AI-SDLC delivery flow in Cursor using Task subagents — product authoring (initiative → brief → epic → feature), the one Ready-for-Dev gate, the autonomous build loop, parallel PR review, and release — with human gates. Use for multi-agent mode or any orchestrated stage of the three-layer flow.
+description: Coordinate the lean v2 AI-SDLC delivery flow using Task subagents — product authoring (initiative → brief → epic → feature), the one Ready-for-Dev gate, the autonomous build loop, parallel PR review, and release — with human gates. Use for multi-agent mode or any orchestrated stage of the three-layer flow.
 ---
 
 # SDLC Orchestration Skill
@@ -8,7 +8,7 @@ description: Coordinate the lean v2 AI-SDLC delivery flow in Cursor using Task s
 ## Purpose
 
 Route user intent to the correct stage of the **lean three-layer flow**, delegate bounded
-work to Cursor Task subagents, and fan in results. Humans decide *what* and *whether*; agents
+work to Task subagents, and fan in results. Humans decide *what* and *whether*; agents
 draft the detail and implement; the loop ships draft PRs; humans merge. Status, dates, and
 progress live in GitHub — markdown holds only durable intent.
 
@@ -57,7 +57,7 @@ See [`standard/guide.md`](../../standard/guide.md) for the canonical lifecycle.
 | Runbooks | ops | `runbook-batch` | runbook-generation |
 | Parity cutover | brownfield | `parity-verify` | parity-verify |
 
-## Activity types → Cursor Task
+## Activity types → Task
 
 | Activity type | Task | Readonly |
 |---------------|------|----------|
@@ -96,9 +96,9 @@ spec-loop ([`spec-author`](../spec-author/SKILL.md)) authors `specs/<slug>/{spec
 and opens a **spec-only** draft PR (`spec/<n>-<slug>`, `Refs #`) → engineer merges it → card
 **auto-promotes** to `Ready for Dev` → implement-loop takes over. Opt-in; simple features skip it.
 
-### 3. Build — the autonomous loop family
+### 3. Build — the autonomous loop family (kloop)
 
-The **implement-loop** (build member of the [`engineering-work-loop`](../engineering-work-loop/SKILL.md)
+The **implement-loop** (build member of the [kloop](../engineering-work-loop/SKILL.md)
 family) picks up `Ready for Dev` issues and, per feature, works in an isolated git worktree via
 [`implement`](../implement/SKILL.md): it authors (or reads, if spec-loop already wrote it) the code-repo
 **spec folder** `specs/<feature>/{spec,plan,tasks}.md`, implements, re-runs every Loop AC `verify:` itself
@@ -152,7 +152,7 @@ artifact (same as epic-batch). Forward: migration-plan → parity-baseline → d
 - Review reports present before the merge prompt
 - Failed tasks have an `error` set
 
-## Cursor invocation examples
+## Invocation examples
 
 ```
 Generate all epics from the product brief in multi-agent mode

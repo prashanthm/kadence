@@ -18,6 +18,7 @@ from engineering_work_loop_config import (
     toolkit_example_path,
     toolkit_root,
 )
+from loop_registry import app_namespace
 from pr_fix_config import _load_raw
 from pr_fix_setup import detect_primary_clone, gh_user, verify_prereqs
 
@@ -56,17 +57,17 @@ CRON_SCRIPT_RELATIVE = Path("scripts/engineering-work-loop-cron.sh")
 
 def local_state_dirs() -> list[Path]:
     return [
-        Path("~/.local/share/ai-sdlc") / _sfx("worktrees"),
-        Path("~/.local/share/ai-sdlc") / _sfx(f"{loop_name()}-reports"),
+        Path(f"~/.local/share/{app_namespace()}") / _sfx("worktrees"),
+        Path(f"~/.local/share/{app_namespace()}") / _sfx(f"{loop_name()}-reports"),
     ]
 
 
 def launchd_label() -> str:
-    # com.ai-sdlc[.<inst>].<loop>, e.g. com.ai-sdlc.implement-loop,
-    # com.ai-sdlc-v2.spec-loop. The loop name replaces the old hardcoded
+    # com.<namespace>[.<inst>].<loop>, e.g. com.kadence.implement-loop,
+    # com.kadence-v2.spec-loop. The loop name replaces the old hardcoded
     # 'engineering-work-loop' (which now names the family, not a concrete loop).
     s = instance_suffix()
-    return f"com.ai-sdlc{s}.{loop_name()}"
+    return f"com.{app_namespace()}{s}.{loop_name()}"
 
 
 def launchd_plist() -> Path:
@@ -74,21 +75,21 @@ def launchd_plist() -> Path:
 
 
 def windows_task_name() -> str:
-    return f"ai-sdlc{instance_suffix()}-{loop_name()}"
+    return f"{app_namespace()}{instance_suffix()}-{loop_name()}"
 
 
 def windows_task_script() -> Path:
-    return Path.home() / ".local/share/ai-sdlc" / _sfx(f"{loop_name()}-task.ps1")
+    return Path.home() / f".local/share/{app_namespace()}" / _sfx(f"{loop_name()}-task.ps1")
 
 
 def latest_md() -> Path:
-    return Path.home() / ".local/share/ai-sdlc" / _sfx(f"{loop_name()}-latest.md")
+    return Path.home() / f".local/share/{app_namespace()}" / _sfx(f"{loop_name()}-latest.md")
 
 
 def cron_log() -> Path:
     # Per-loop (and per-instance) so the family members never clobber each other's
     # cron log, e.g. implement-loop-cron.log, spec-loop-cron-v2.log.
-    return Path.home() / ".local/share/ai-sdlc" / _sfx(f"{loop_name()}-cron.log")
+    return Path.home() / f".local/share/{app_namespace()}" / _sfx(f"{loop_name()}-cron.log")
 
 
 def is_windows() -> bool:
@@ -161,7 +162,7 @@ def _expand(path: Path) -> Path:
 
 
 def ensure_dirs() -> None:
-    _expand(Path("~/.config/ai-sdlc")).mkdir(parents=True, exist_ok=True)
+    _expand(Path(f"~/.config/{app_namespace()}")).mkdir(parents=True, exist_ok=True)
     for d in local_state_dirs():
         _expand(d).mkdir(parents=True, exist_ok=True)
 
@@ -170,7 +171,7 @@ def build_overlay(
     *,
     github_user: str,
     primary_clone: str,
-    agent_backend: str = "cursor",
+    agent_backend: str = "claude",
     agent_model: str = "",
 ) -> dict[str, Any]:
     return {
@@ -205,7 +206,7 @@ def refresh_overlay(refresh: bool = False) -> Path:
     overlay = build_overlay(
         github_user=gh_user(),
         primary_clone=detect_primary_clone(toolkit_root()),
-        agent_backend="cursor",
+        agent_backend="claude",
     )
     return write_overlay(overlay)
 
@@ -244,8 +245,12 @@ def render_windows_task_script(toolkit: Path, cfg: dict[str, Any]) -> str:
         "$env:ENGINEERING_LOOP_TOOLKIT=" + _ps_quote(str(toolkit)),
     ]
 
-    # Parity with the launchd plist: instance, loop name + prompt, and base ref so a
-    # Windows Task Scheduler install runs the same family loop against the same branch.
+    # Parity with the launchd plist: namespace override, instance, loop name + prompt,
+    # and base ref so a Windows Task Scheduler install runs the same family loop against
+    # the same branch and namespace.
+    ns_override = os.environ.get("KADENCE_NAMESPACE", "").strip()
+    if ns_override:
+        lines.append("$env:KADENCE_NAMESPACE=" + _ps_quote(ns_override))
     inst = os.environ.get("ENGINEERING_LOOP_INSTANCE", "").strip()
     if inst:
         lines.append("$env:ENGINEERING_LOOP_INSTANCE=" + _ps_quote(inst))
@@ -268,20 +273,12 @@ def render_windows_task_script(toolkit: Path, cfg: dict[str, Any]) -> str:
     if base_ref:
         lines.append("$env:ENGINEERING_LOOP_BASE_REF=" + _ps_quote(base_ref))
 
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
-    if backend == "cursor":
-        key = os.environ.get("CURSOR_API_KEY", "").strip()
-        if key:
-            lines.append("$env:CURSOR_API_KEY=" + _ps_quote(key))
-    elif backend == "claude":
-        token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-        if token:
-            lines.append("$env:CLAUDE_CODE_OAUTH_TOKEN=" + _ps_quote(token))
-        elif api_key:
-            lines.append("$env:ANTHROPIC_API_KEY=" + _ps_quote(api_key))
-    else:
-        lines.append("$env:COPILOT_ALLOW_ALL='1'")
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if token:
+        lines.append("$env:CLAUDE_CODE_OAUTH_TOKEN=" + _ps_quote(token))
+    elif api_key:
+        lines.append("$env:ANTHROPIC_API_KEY=" + _ps_quote(api_key))
 
     lines.append("& " + _ps_quote(bash) + " " + _ps_quote(str(cron_script)))
     return "\n".join(lines) + "\n"
@@ -304,7 +301,6 @@ def render_launchd_plist(toolkit: Path, cfg: dict[str, Any]) -> str:
     home = str(Path.home())
     cron_script = toolkit / CRON_SCRIPT_RELATIVE
     overlay = operator_overlay_path()
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
     user = os.environ.get("USER", Path.home().name)
 
     env_lines = [
@@ -319,6 +315,14 @@ def render_launchd_plist(toolkit: Path, cfg: dict[str, Any]) -> str:
         "    <key>ENGINEERING_LOOP_TOOLKIT</key>",
         f"    <string>{toolkit}</string>",
     ]
+    # Namespace override — only when set, so the cron'd loop resolves the same
+    # config/state/label namespace as install time (default 'kadence' needs nothing).
+    ns_override = os.environ.get("KADENCE_NAMESPACE", "").strip()
+    if ns_override:
+        env_lines += [
+            "    <key>KADENCE_NAMESPACE</key>",
+            f"    <string>{ns_override}</string>",
+        ]
     # Instance name — so the cron'd loop resolves its own instance-suffixed config/state.
     inst = os.environ.get("ENGINEERING_LOOP_INSTANCE", "").strip()
     if inst:
@@ -358,37 +362,20 @@ def render_launchd_plist(toolkit: Path, cfg: dict[str, Any]) -> str:
             "    <key>ENGINEERING_LOOP_BASE_REF</key>",
             f"    <string>{base_ref}</string>",
         ]
-    if backend == "cursor":
-        key = os.environ.get("CURSOR_API_KEY", "").strip()
-        if key:
-            env_lines.extend(
-                [
-                    "    <key>CURSOR_API_KEY</key>",
-                    f"    <string>{key}</string>",
-                ]
-            )
-    elif backend == "claude":
-        token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-        if token:
-            env_lines.extend(
-                [
-                    "    <key>CLAUDE_CODE_OAUTH_TOKEN</key>",
-                    f"    <string>{token}</string>",
-                ]
-            )
-        elif api_key:
-            env_lines.extend(
-                [
-                    "    <key>ANTHROPIC_API_KEY</key>",
-                    f"    <string>{api_key}</string>",
-                ]
-            )
-    else:
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if token:
         env_lines.extend(
             [
-                "    <key>COPILOT_ALLOW_ALL</key>",
-                "    <string>1</string>",
+                "    <key>CLAUDE_CODE_OAUTH_TOKEN</key>",
+                f"    <string>{token}</string>",
+            ]
+        )
+    elif api_key:
+        env_lines.extend(
+            [
+                "    <key>ANTHROPIC_API_KEY</key>",
+                f"    <string>{api_key}</string>",
             ]
         )
 
@@ -611,7 +598,7 @@ def cmd_status(_args: argparse.Namespace) -> int:
     print(f"toolkit example: {example}")
     print(f"operator overlay: {overlay} ({'exists' if overlay.is_file() else 'missing'})")
     print(f"{scheduler_name()} loaded: {scheduler_loaded()}")
-    print("local state: ~/.local/share/ai-sdlc/")
+    print(f"local state: ~/.local/share/{app_namespace()}/")
     if latest_md().is_file():
         print(f"\n--- {latest_md()} ---\n")
         print(latest_md().read_text(encoding="utf-8"))

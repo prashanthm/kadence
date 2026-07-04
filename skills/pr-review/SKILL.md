@@ -35,7 +35,7 @@ Review code for correctness, regressions, edge cases, and alignment with task/fe
 - Distinguish blocking vs nice-to-have.
 - Readonly — no code edits, no merge.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

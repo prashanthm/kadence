@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
 from pr_review_loop_config import expand_path
 
 
@@ -13,16 +14,16 @@ def status_paths(cfg: dict[str, Any]) -> dict[str, Path]:
     st = cfg.get("status") or {}
     return {
         "latest_json": Path(expand_path(st.get(
-            "latest_json", "~/.local/share/ai-sdlc/pr-review-loop-latest.json"))),
+            "latest_json", f"~/.local/share/{app_namespace()}/pr-review-loop-latest.json"))),
         "latest_md": Path(expand_path(st.get(
-            "latest_md", "~/.local/share/ai-sdlc/pr-review-loop-latest.md"))),
+            "latest_md", f"~/.local/share/{app_namespace()}/pr-review-loop-latest.md"))),
         "firing_log": Path(expand_path(st.get(
-            "firing_log", "~/.local/share/ai-sdlc/pr-review-loop-firings.log"))),
+            "firing_log", f"~/.local/share/{app_namespace()}/pr-review-loop-firings.log"))),
     }
 
 
 def state_log_path(cfg: dict[str, Any]) -> Path:
-    return Path(expand_path(cfg.get("state_log", "~/.local/share/ai-sdlc/pr-review-loop.log")))
+    return Path(expand_path(cfg.get("state_log", f"~/.local/share/{app_namespace()}/pr-review-loop.log")))
 
 
 def append_state_log(cfg: dict[str, Any], record: dict[str, Any]) -> None:

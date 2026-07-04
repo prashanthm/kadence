@@ -31,7 +31,7 @@ Initiative (why, funding)                         initiatives/<slug>/initiative.
   positional ID, no issue number in the file — the issue links back by slug + branch.
 - **Ready for Dev (the gate).** A human reviews the feature and moves its card to
   `Ready for Dev`. Nothing is built before this.
-- **Build (the loop).** The engineering-work-loop picks up `Ready for Dev` issues, works
+- **Build (the loop).** The kloop family picks up `Ready for Dev` issues, works
   each in an isolated git worktree, authors the code-repo **spec folder**
   (`specs/<feature>/{spec,plan,tasks}.md`), implements, and **re-runs every Loop AC
   `verify:` itself** (the agent's `[x]` is advisory). It opens a **draft** PR with a Work
@@ -54,7 +54,7 @@ Initiative (why, funding)                         initiatives/<slug>/initiative.
 **The agent proposes; the deterministic harness disposes.** Every reward — a green Loop AC,
 "done", a board moving to Done — is backed by a command the harness re-runs (`verify_loop_ac
 --enforce`) and an artifact it can see (`report_gate` diff-vs-claim). Never an agent's
-self-report. `ai-sdlc doctor` gates every change to the toolkit itself.
+self-report. `kadence doctor` gates every change to the toolkit itself.
 
 ## Where things live (durable vs mutable)
 
@@ -69,7 +69,7 @@ self-report. `ai-sdlc doctor` gates every change to the toolkit itself.
 1. Draft an initiative + product brief (Epic Index = release order).
 2. Generate epics → features (What/Why/AC; slug-named).
 3. Move a feature to `Ready for Dev`.
-4. Run the loop (`engineering-work-loop`) — it opens a draft PR.
+4. Run the loop (the `kloop` family) — it opens a draft PR.
 5. Review, merge. The board tracks itself.
 
 See [glossary.md](glossary.md) for the locked vocabulary and [project-board.md](project-board.md)

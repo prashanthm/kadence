@@ -233,7 +233,7 @@ def fire(
         "repo": full_repo,
         "pr": pr,
         "agent_exit_code": exit_code,
-        "agent_backend": cfg.get("agent_backend", "cursor"),
+        "agent_backend": cfg.get("agent_backend", "claude"),
         "agent_model": cfg.get("agent_model", ""),
         "agent_summary": agent_out[-4000:] if agent_out else "",
         "publish_exit_code": pub_code,

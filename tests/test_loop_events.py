@@ -55,7 +55,7 @@ def test_repo_slug_is_filename_safe(tmp_path):
     d = str(tmp_path)
     append_event("prashanthm/product-workspace", "run1", "discover", events_dir=d)
     path = events_path("prashanthm/product-workspace", d)
-    assert path.name == "your-org__product-workspace.jsonl"
+    assert path.name == "prashanthm__product-workspace.jsonl"
     assert path.exists()
 
 

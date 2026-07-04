@@ -1,13 +1,16 @@
 ---
 name: engineering-work-loop
-description: The engineering-work-loop FAMILY — four peer loops over one shared engine (spec-loop, implement-loop, pr-review-loop, pr-comment-fix-loop). Each is a git-worktree polling loop that verifies Loop AC and opens a draft PR; operator marks ready, human merges. implement-loop is the default (build) member.
+description: The kloop FAMILY (a.k.a. engineering-work-loop) — four peer loops over one shared engine (spec-loop, implement-loop, pr-review-loop, pr-comment-fix-loop). Each is a git-worktree polling loop that verifies Loop AC and opens a draft PR; operator marks ready, human merges. implement-loop is the default (build) member.
 ---
 
-# Engineering Work Loop (family)
+# kloop — the engineering work loop family
 
-`engineering-work-loop` is the **family** of four peer loops that share one engine
-(discovery, worktree, verify, report gate, config, cron/launchd/Task-Scheduler install).
-Each loop is a thin descriptor over that engine — see [`scripts/loop_registry.py`](../../scripts/loop_registry.py).
+**kloop** (legacy name: `engineering-work-loop`) is the **family** of four peer loops
+that share one engine (discovery, worktree, verify, report gate, config, cron/launchd/
+Task-Scheduler install). Each loop is a thin descriptor over that engine — see
+[`scripts/loop_registry.py`](../../scripts/loop_registry.py). The skill, the setup
+scripts, and the `ENGINEERING_LOOP_*` env vars keep the `engineering-work-loop` stem;
+`kloop` is the brand for the family and an accepted family selector.
 
 | Loop | Gate | Skill | Prompt | Opens |
 |------|------|-------|--------|-------|
@@ -18,7 +21,7 @@ Each loop is a thin descriptor over that engine — see [`scripts/loop_registry.
 
 Install a family loop with `engineering-work-loop-setup.sh --loop <name> install` (spec-loop /
 implement-loop run over the shared engine; pr-review-loop / pr-comment-fix-loop have their own setup
-scripts). `engineering-work-loop` names the family, not a concrete loop — a bare install is `implement-loop`.
+scripts). `kloop` (or the legacy `engineering-work-loop`) names the family, not a concrete loop — a bare install is `implement-loop`.
 
 ## Purpose (the default member: implement-loop)
 

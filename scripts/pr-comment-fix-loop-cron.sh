@@ -10,7 +10,8 @@ export PR_FIX_TOOLKIT="$(cd "$SCRIPT_DIR/.." && pwd)"
 # so a crashed firing (trap EXIT never ran) is reaped immediately rather than
 # blocking for the full stale window. Falls back to an mtime threshold when the
 # PID is unknown/unreadable.
-LOCK_DIR="${PR_FIX_LOCK_DIR:-${HOME}/.local/share/ai-sdlc/pr-comment-fix-loop.lock}"
+NS="${KADENCE_NAMESPACE:-kadence}"
+LOCK_DIR="${PR_FIX_LOCK_DIR:-${HOME}/.local/share/${NS}/pr-comment-fix-loop.lock}"
 LOCK_STALE_MIN="${PR_FIX_LOCK_STALE_MIN:-120}"
 mkdir -p "$(dirname "$LOCK_DIR")"
 if [[ -d "$LOCK_DIR" ]]; then

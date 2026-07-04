@@ -17,15 +17,15 @@ cadence_minutes: 15
 adjacent_reviewers: []
 # Wait for CI on the head commit before reviewing substance (defer-to-CI rule).
 defer_to_ci: true
-agent_backend: cursor
+agent_backend: claude
 agent_model: ""
-state_log: ~/.local/share/ai-sdlc/pr-review-loop.log
+state_log: ~/.local/share/kadence/pr-review-loop.log
 labels:
   complete: pr-review-loop-complete
   in_progress: pr-review-loop-in-progress
 report:
   apply_labels: true
 status:
-  latest_json: ~/.local/share/ai-sdlc/pr-review-loop-latest.json
-  latest_md: ~/.local/share/ai-sdlc/pr-review-loop-latest.md
-  firing_log: ~/.local/share/ai-sdlc/pr-review-loop-firings.log
+  latest_json: ~/.local/share/kadence/pr-review-loop-latest.json
+  latest_md: ~/.local/share/kadence/pr-review-loop-latest.md
+  firing_log: ~/.local/share/kadence/pr-review-loop-firings.log

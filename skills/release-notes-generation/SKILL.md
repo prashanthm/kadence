@@ -28,7 +28,7 @@ Produce changelog-style release notes linking PRs to features and epics for stak
 4. Write to `initiatives/<slug>/release-notes-<phase>.md` or a repo CHANGELOG section.
 5. Request PO review before publishing.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

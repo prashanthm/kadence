@@ -26,7 +26,7 @@ Document operational procedures: deploy, rollback, troubleshoot, on-call steps f
 3. Link to observability dashboards and alerts.
 4. Write to `<code-repo>/docs/runbooks/<service>.md`.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|
