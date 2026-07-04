@@ -1,0 +1,60 @@
+{
+  "github_user": "prashanthm",
+  "min_reviewer_feedback": 2,
+  "exclude_reviewers": [],
+  "max_files_changed": 15,
+  "max_rounds": 3,
+  "labels": {
+    "complete": "pr-fix-cycle-complete",
+    "in_progress": "pr-fix-cycle-in-progress",
+    "deferred": "pr-fix-deferred",
+    "needs_human": "pr-fix-needs-human"
+  },
+  "state_log": "~/.local/share/ai-sdlc/pr-comment-fix-loop.log",
+  "in_progress_stale_hours": 2,
+  "git": {
+    "primary_clone": "~/projects/product-workspace",
+    "worktree_root": "~/.local/share/ai-sdlc/worktrees"
+  },
+  "repos": [
+    {
+      "owner": "your-org",
+      "repo": "product-workspace",
+      "initiative_label": "ai-native-development",
+      "initiatives_path": "initiatives/ai-native-development",
+      "clone_path": "~/projects/product-workspace"
+    },
+    {
+      "owner": "your-org",
+      "repo": "engineering-reports",
+      "clone_path": "~/projects/engineering-reports"
+    },
+    {
+      "owner": "your-org",
+      "repo": "edi-artifact-registry-infra",
+      "clone_path": "~/projects/edi-artifact-registry-infra"
+    }
+  ],
+  "context": {
+    "max_tokens": 12000,
+    "include_local_reviews": true
+  },
+  "report": {
+    "submit": false,
+    "push": false,
+    "apply_labels": false,
+    "draft_path": "~/.local/share/ai-sdlc/pr-fix-reports",
+    "branch_draft_dir": ".sdlc/pr-fix-reports"
+  },
+  "status": {
+    "latest_json": "~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.json",
+    "latest_md": "~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.md",
+    "firing_log": "~/.local/share/ai-sdlc/pr-comment-fix-loop-firings.log",
+    "firing_dir": "~/.local/share/ai-sdlc/firings"
+  },
+  "cadence_minutes": 15,
+  "max_items_per_firing": 1,
+  "agent_backend": "cursor",
+  "agent_cmd": "cursor-agent",
+  "agent_model": ""
+}

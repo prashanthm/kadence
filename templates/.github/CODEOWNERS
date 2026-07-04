@@ -1,0 +1,26 @@
+# CODEOWNERS — auto-requests reviewers on every PR (GitHub-native).
+#
+# WHY the toolkit requires this: the pr-review-loop reviews PRs where the operator
+# is a REQUESTED reviewer, and it refuses to review a PR authored by the operator
+# (self_pr — you can't review your own work). The build loops (spec/implement) author
+# PRs as the operator's `@me`. So for the autonomous review chain to work, GitHub must
+# auto-request a reviewer who is NOT the loop's author.
+#
+# THE RULE: the reviewer(s) named here MUST be a different identity than whoever the
+# build loops author PRs as. GitHub never requests review from the PR author even if
+# they are a code owner — so if the loop authors as <op> and <op> is the only owner,
+# NO reviewer is requested and pr-review-loop finds nothing. Name a teammate (or a
+# team) other than the loop operator.
+#
+# SETUP:
+#   1. Replace <reviewer> below with the GitHub handle (@user) or team
+#      (@org/team) that reviews this repo — NOT the loop's author account.
+#   2. Point pr-review-loop's `github_user` at that same reviewer, and run the
+#      pr-review-loop under that reviewer's `gh` auth (so its review posts as them).
+#   3. (Optional) enable branch protection "Require review from Code Owners" to
+#      enforce it.
+#
+# Default: every file is owned by the reviewer (whole-repo review). Narrow to paths
+# (e.g. `src/ @backend-team`) as the team grows.
+
+*   @<reviewer>

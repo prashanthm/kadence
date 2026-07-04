@@ -1,0 +1,177 @@
+# Project Status automation — PR events (mechanical moves only).
+#
+# Reproducible replacement for GitHub Projects' UI-only built-in workflows: sets
+# the linked issue's Project Status on PR open/merge. It sets ONLY mechanical
+# statuses (In review, Done) and never overwrites a human gate (Ready for Spec /
+# Approved / Ready for Dev) — set_project_status.py refuses those. The ONE
+# exception is the spec-review flow: a merged spec/* PR (spec-loop) promotes its
+# card Ready for Spec -> Ready for Dev (--spec-merge-promote), because merging the
+# spec IS the human plan-approval. No other gate move is ever automated.
+#
+# AUTH — GitHub App (no per-repo PATs). The default GITHUB_TOKEN cannot write org
+# Projects v2, so this mints a short-lived installation token from a shared org
+# **GitHub App** (Projects: read/write) via actions/create-github-app-token. Set
+# the App up once for the org and add two org-level secrets — see
+# standard/projects-app-auth.md:
+#   PROJECTS_APP_ID           — the App's numeric App ID
+#   PROJECTS_APP_PRIVATE_KEY  — the App's private key (.pem contents)
+#
+# ADOPTER SETUP (see SETUP.md):
+#   1. Copy this file to <your-repo>/.github/workflows/project-status-on-pr.yml
+#   2. Set PROJECT_ORG / PROJECT_NUMBER below to your board.
+#   3. Ensure the org App is installed on the repo and the two org secrets exist.
+#   4. Vendor set_project_status.py (copy it in, or check out the toolkit) so the
+#      run step can call it; the example below assumes it at scripts/.
+#
+# PR -> issue linkage. GitHub only populates closingIssuesReferences (and only
+# auto-closes) for PRs targeting the DEFAULT branch — so on an integration branch
+# (phase2, release branches) `Closes #N` is INERT. This workflow parses `Closes #N`
+# from the PR BODY itself (works on any target branch) and unions it with
+# closingIssuesReferences (default-branch PRs). Two-state train lifecycle: a merge
+# into a NON-default branch sets the card to Done but does NOT close the issue (it
+# closes when the branch reaches the default branch); a default-branch merge closes it.
+# "In review" fires on ready_for_review (the draft promoted), not on a draft `opened`.
+
+name: Project Status (PR)
+
+on:
+  pull_request:
+    types: [opened, ready_for_review, reopened, closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  PROJECT_ORG: your-org
+  PROJECT_NUMBER: "0" # <-- set to your Project number
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Mint a short-lived token from the shared org GitHub App (Projects rw).
+      - name: Get Projects App token
+        id: app
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.PROJECTS_APP_ID }}
+          private-key: ${{ secrets.PROJECTS_APP_PRIVATE_KEY }}
+          owner: ${{ env.PROJECT_ORG }}
+
+      - name: Resolve target status from PR event
+        id: target
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          MERGED="${{ github.event.pull_request.merged }}"
+          ACTION="${{ github.event.action }}"
+          # A spec PR (spec-loop) is identified by its branch prefix: spec/<n>-<slug>.
+          case "$HEAD_REF" in
+            spec/*) IS_SPEC=1 ;;
+            *)      IS_SPEC=0 ;;
+          esac
+          if [ "$ACTION" = "closed" ] && [ "$MERGED" = "true" ]; then
+            if [ "$IS_SPEC" = "1" ]; then
+              # Merging the spec = plan approved -> promote to the build gate.
+              echo "status=Ready for Dev" >> "$GITHUB_OUTPUT"
+              echo "mode=spec-promote" >> "$GITHUB_OUTPUT"
+            else
+              echo "status=Done" >> "$GITHUB_OUTPUT"
+              echo "mode=done" >> "$GITHUB_OUTPUT"
+            fi
+          elif [ "$ACTION" = "closed" ]; then
+            echo "status=" >> "$GITHUB_OUTPUT"   # closed-unmerged: no mechanical move
+            echo "mode=" >> "$GITHUB_OUTPUT"
+          elif [ "$IS_SPEC" = "1" ]; then
+            # A spec PR under review does not move the card (it stays Ready for Spec).
+            echo "status=" >> "$GITHUB_OUTPUT"
+            echo "mode=" >> "$GITHUB_OUTPUT"
+          elif [ "$ACTION" = "ready_for_review" ] || [ "$ACTION" = "reopened" ]; then
+            # "In review" fires when the DRAFT is promoted to ready (the human signal
+            # that review has started) — NOT on `opened`, because the loop opens its
+            # code PR as a DRAFT awaiting the operator. A draft-open leaves the card at
+            # Ready for Dev; marking it ready advances it to In review.
+            echo "status=In review" >> "$GITHUB_OUTPUT"
+            echo "mode=in-review" >> "$GITHUB_OUTPUT"
+          else
+            # opened (incl. draft): no move — wait for ready_for_review.
+            echo "status=" >> "$GITHUB_OUTPUT"
+            echo "mode=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set Project Status for the PR and its linked issues
+        if: steps.target.outputs.status != ''
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          STATUS: ${{ steps.target.outputs.status }}
+          MODE: ${{ steps.target.outputs.mode }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          if [ "$MODE" = "spec-promote" ]; then
+            # A spec PR uses "Refs #N" (no closingIssuesReferences); parse the issue
+            # number from the branch spec/<n>-<slug>.
+            NUM="$(printf '%s' "$HEAD_REF" | sed -n 's#^spec/\([0-9][0-9]*\)-.*#\1#p')"
+            if [ -z "$NUM" ]; then
+              echo "spec PR branch '$HEAD_REF' has no spec/<n>-<slug> issue number; nothing to promote"
+              exit 0
+            fi
+            url="$(gh issue view "$NUM" --json url --jq .url)"
+            python3 scripts/set_project_status.py \
+              --org "$PROJECT_ORG" --project "$PROJECT_NUMBER" \
+              --content-url "$url" --status "Ready for Dev" --spec-merge-promote
+            exit 0
+          fi
+          # Build/normal path. GitHub only populates closingIssuesReferences for PRs
+          # targeting the DEFAULT branch — so a phase2/integration PR's `Closes #N` is
+          # inert and that list is EMPTY. Parse `Closes #N` from the PR BODY instead
+          # (works on any target branch), and union with closingIssuesReferences so
+          # default-branch PRs keep working. Same-repo issue numbers only.
+          PR_JSON=$(gh pr view "${{ github.event.pull_request.number }}" \
+            --json url,body,closingIssuesReferences,baseRefName)
+          PR_URL=$(printf '%s' "$PR_JSON" | jq -r '.url')
+          BASE=$(printf '%s' "$PR_JSON" | jq -r '.baseRefName')
+          # issue numbers from closingIssuesReferences (default-branch PRs)
+          NUMS=$(printf '%s' "$PR_JSON" | jq -r '(.closingIssuesReferences[].number) // empty' 2>/dev/null || true)
+          # issue numbers parsed from the body's closing keywords (any branch).
+          # parse_closing_issues.py ignores keywords inside `code spans` / ```fences``` —
+          # so a body that only DESCRIBES `Closes #N` (a doc PR) does not close it.
+          BODY_NUMS=$(printf '%s' "$PR_JSON" | jq -r '.body' \
+            | python3 scripts/parse_closing_issues.py || true)
+          NUMS=$(printf '%s\n%s\n' "$NUMS" "$BODY_NUMS" | sed '/^$/d' | sort -un)
+
+          # Determine the default branch to know if this is a "released to main" merge.
+          DEFAULT_BRANCH=$(gh api "repos/${GITHUB_REPOSITORY:-$PROJECT_ORG/unknown}" --jq .default_branch 2>/dev/null || echo main)
+
+          set_issue() {
+            local url="$1" status="$2" override="$3"
+            python3 scripts/set_project_status.py \
+              --org "$PROJECT_ORG" --project "$PROJECT_NUMBER" \
+              --content-url "$url" --status "$status" $override
+          }
+
+          # The PR card itself (if it's a board item) tracks In review / Done as before.
+          if [ "$STATUS" = "In review" ]; then
+            set_issue "$PR_URL" "In review" "" || true
+          fi
+
+          for n in $NUMS; do
+            iurl="$(gh issue view "$n" --json url --jq .url 2>/dev/null)" || continue
+            if [ "$STATUS" = "In review" ]; then
+              # PR opened for a Ready-for-Dev card -> work started -> In review.
+              # --allow-dev-review permits exactly Ready for Dev -> In review.
+              set_issue "$iurl" "In review" "--allow-dev-review" || true
+            elif [ "$STATUS" = "Done" ]; then
+              # Two-state train lifecycle: a merge into the DEFAULT branch (main) is a
+              # release -> set Done (native Closes also closes the issue there). A merge
+              # into a NON-default integration branch (phase2) is dev-complete -> set
+              # Done on the board but DO NOT close the issue (it closes at the main merge).
+              set_issue "$iurl" "Done" "--allow-gate-override" || true
+              if [ "$BASE" = "$DEFAULT_BRANCH" ]; then
+                gh issue close "$n" 2>/dev/null || true
+              fi
+            fi
+          done

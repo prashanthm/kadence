@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.todo_backups/
+todos.md
+.venv/

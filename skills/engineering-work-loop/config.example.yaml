@@ -1,0 +1,123 @@
+github_user: prashanthm
+# Each repo may set clone_path (the local git clone used for worktrees).
+# Repos without clone_path fall back to git.primary_clone.
+repos:
+  - owner: your-org
+    repo: product-workspace
+    initiative_label: ai-native-development
+    initiatives_path: initiatives/ai-native-development
+    clone_path: ~/projects/product-workspace
+    # Optional: fork worktrees from a repo-specific branch (overrides git.base_ref).
+    # base_ref: origin/phase2
+  - owner: your-org
+    repo: engineering-reports
+    clone_path: ~/projects/engineering-reports
+  - owner: your-org
+    repo: edi-artifact-registry-infra
+    clone_path: ~/projects/edi-artifact-registry-infra
+git:
+  # primary_clone is the fallback clone for repos that don't set clone_path.
+  primary_clone: ~/projects/product-workspace
+  # Default fork branch for worktrees when repos[].base_ref is unset (default origin/main).
+  # base_ref: origin/main
+  worktree_root: ~/.local/share/ai-sdlc/worktrees
+  fetch_only_in_primary: true
+  release_after_pr: true
+  keep_worktree_on_failure: true
+cadence_minutes: 15
+cooldown_hours: 24
+# Per-repo cap on items processed in one firing (sequential agent runs).
+max_items_per_repo: 5
+# Legacy global ceiling. Leave unset for multi-item behavior; set to 1 to force
+# single-item firings (honored as a hard cap across all repos when present).
+# max_items_per_firing: 1
+pr:
+  open_as_draft: true   # loop only — operator runs gh pr ready before requesting reviewers
+  # Risk-based auto-land (e04-f10). OFF by default: behavior is identical to
+  # today (draft PR, operator marks ready, human merges). A PR is promoted +
+  # merged only when ALL gates hold: tier == auto_ready_tier, Loop AC passed,
+  # mergeable, CI green, pr-review-loop APPROVED, within task budget, base ==
+  # integration_branch. Roll out shadow-first: enabled:false -> enabled:true +
+  # dry_run:true (logs "would merge") -> dry_run:false.
+  merge_policy:
+    enabled: false
+    auto_ready_tier: auto
+    require_pr_review_approved: true
+    require_ci_green: true
+    require_mergeable: true
+    # method: merge | squash
+    method: merge
+    delete_branch: true
+    # dry_run: shadow mode — log the decision, perform no GitHub writes
+    dry_run: true
+verify:
+  auto_allowed_prefixes:
+    - "test "
+    - "grep "
+    - "gh issue view"
+    - "gh pr checks"
+    - "gh api "
+    # loop_check.py covers no-shell helpers: cmd-succeeds "<argv>",
+    # cmd-fails "<argv>" (behavioral verify), issue-closed.
+    - "python3 scripts/loop_check.py"
+    - "git diff"
+    - "git -C "
+    - "git rev-parse"
+enabled_work_types:
+  - chore
+  - dependabot
+  - feature
+  - task
+  - fix
+dependabot:
+  auto_tier_max_bump: minor
+  ecosystems:
+    - pip
+    - npm
+    - github-actions
+feature:
+  # Feature = the build unit: one feature -> one spec (specs/<slug>/{spec,plan,tasks}.md)
+  # -> one PR (Closes #<feature-issue>). Right-sized at generation time. Auto tier when
+  # the issue carries a ## Loop AC section with behavioral verify: commands. There is no
+  # diff-size tripwire — Loop AC verifies behavior, not size.
+chore:
+  path_allowlist:
+    - .github/
+    - docs/
+    - scripts/
+    - standard/
+    - initiatives/
+process_assist: false
+discovery:
+  require_loop_ac_on_issue: false
+# Project-board Status gate (optional). When status_gates is non-empty, the loop
+# reads each assigned issue's Status on the named org GitHub Project and only
+# picks up issues whose Status is in the allow-list — so a task is implemented
+# only after a human moves it to "Ready for Dev" (spec reviewed/approved).
+# Fails CLOSED: an issue not on the board, or in another Status, is skipped
+# (project_status_gated). Leave it empty to disable gating (loop behaves as before).
+#
+# PER-REPO (recommended): put the project block on the repos[] entry whose issues
+# live on that board, so only that repo is gated and other repos stay ungated:
+#   - owner: your-org
+#     repo: subsurface-agentic-ai
+#     clone_path: ~/projects/subsurface-agentic-ai
+#     project: { org: your-org, number: 22, status_gates: ["Ready for Dev"] }
+#
+# A TOP-LEVEL project block (below) is the default for any repo that doesn't
+# declare its own — leave status_gates empty unless EVERY assigned issue across
+# ALL configured repos lives on that one board (otherwise it gates them out).
+project:
+  org: your-org
+  number:
+  status_gates: []
+agent_backend: cursor
+agent_model: ""
+# Log/status paths are LEFT UNSET so they derive per-loop from the active loop name
+# (implement-loop.log, spec-loop-latest.md, ...), keeping family members from
+# clobbering each other. Override here only if you want a fixed custom path.
+# state_log: ~/.local/share/ai-sdlc/<loop>.log
+# status:
+#   latest_json: ~/.local/share/ai-sdlc/<loop>-latest.json
+#   latest_md: ~/.local/share/ai-sdlc/<loop>-latest.md
+#   firing_log: ~/.local/share/ai-sdlc/<loop>-firings.log

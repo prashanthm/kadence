@@ -1,0 +1,13 @@
+{
+  "fired_at": "2026-07-03T22:50:00+00:00",
+  "outcome": "complete",
+  "owner": "your-org",
+  "repo": "kadence",
+  "pr": 32,
+  "head_sha": "377622a",
+  "head_after_fix": "2bbe48b6cc554a6ff015d590b38f267260ae9bef",
+  "round": 1,
+  "rereview_required": false,
+  "rereview_reason": "approved_no_critical_high_fixes",
+  "reviewers_rerequested": []
+}

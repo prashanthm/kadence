@@ -1,0 +1,22 @@
+# Self-CI: `ai-sdlc doctor` gates every change to the toolkit.
+name: Doctor
+
+on:
+  pull_request:
+    branches: [main, v2-integration]
+  push:
+    branches: [main, v2-integration]
+
+jobs:
+  doctor:
+    name: ai-sdlc doctor
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install test deps
+        run: pip install pytest
+      - name: Run ai-sdlc doctor
+        run: python3 scripts/doctor.py

@@ -1,0 +1,187 @@
+# INDEX.md drift check — reusable/callable workflow (workflow_call).
+#
+# WHAT THIS DOES. `initiatives/<slug>/INDEX.md` is a fully mechanically generated file
+# (scripts/generate_initiative_index.py) — one row per epic/feature/ADR under that
+# initiative. It is only correct if someone reruns the generator every time an epic,
+# feature, or ADR doc changes. Without an enforcement step, INDEX.md silently rots the
+# first time a doc is edited without a regeneration pass, which defeats the discovery
+# goal it exists for: an agent trusting a stale index is worse than an agent with no
+# index (false negatives on "does this already exist").
+#
+# This workflow is a DRIFT CHECK, not an auto-fix. It regenerates INDEX.md for each
+# affected initiative into a scratch copy and fails the check if that differs from the
+# committed file — it never commits or pushes anything. The contributor runs the
+# generator locally and commits the result, same as any other generated-artifact gate in
+# this toolkit (e.g. report_gate.py's claimed-files-vs-diff check). This mirrors the
+# ratified feature AC wording exactly ("diffs it against the committed file... fails the
+# check") over an earlier planning-stage assumption that this would be an auto-committing
+# workflow — read the feature issue's Acceptance Criteria as the source of truth if the
+# two ever seem to disagree.
+#
+# SCOPED, NOT FULL-REPO. A push can touch many initiatives' worth of docs across a large
+# monorepo; regenerating every initiative on every push would be wasteful and slow. This
+# workflow computes the changed-file set (git diff) and pipes it through
+# scripts/detect_affected_initiatives.py, which extracts only the initiatives/<slug>
+# prefixes whose epics/, features/, or adrs/ subtree actually changed. Only those
+# initiatives are regenerated and diffed.
+#
+# BOOTSTRAP CASE. An initiative that has never had INDEX.md generated yet is not "stale"
+# — there is nothing to be stale relative to. This workflow skips (does not fail) an
+# affected initiative with no committed INDEX.md, and says so explicitly in the log.
+#
+# AUTH — none needed. generate_initiative_index.py and detect_affected_initiatives.py
+# make zero network/API calls (no `gh`, no GraphQL) — this job only reads the checked-out
+# working tree and writes to a scratch temp directory. `contents: read` is sufficient; no
+# secrets, no GitHub App token (contrast with project-status-on-pr.yml, which needs
+# Projects write access this workflow does not).
+#
+# ADOPTER SETUP (see SETUP.md):
+#   1. Do NOT copy this file wholesale — it is a *reusable* workflow, referenced with
+#      `uses:` from a thin caller workflow you add to <your-repo>/.github/workflows/.
+#      Vendor scripts/generate_initiative_index.py and
+#      scripts/detect_affected_initiatives.py into your repo's scripts/ (or check out the
+#      toolkit) so this workflow's steps can call them.
+#   2. Add a caller workflow, e.g. <your-repo>/.github/workflows/index-regenerate-check.yml:
+#
+#        name: Index Regeneration Check
+#        on:
+#          pull_request:
+#            paths:
+#              - "initiatives/*/epics/**"
+#              - "initiatives/*/features/**"
+#              - "initiatives/*/adrs/**"
+#          push:
+#            branches: [main]
+#            paths:
+#              - "initiatives/*/epics/**"
+#              - "initiatives/*/features/**"
+#              - "initiatives/*/adrs/**"
+#        jobs:
+#          index-check:
+#            uses: your-org/kadence/.github/workflows/index-regenerate.yml@main
+#
+#      The caller's `paths:` filter is a coarse, trigger-level early-exit (skip the job
+#      entirely on pushes that touch nothing under initiatives/) — cost/latency, not
+#      correctness. Correctness (exactly which initiative(s) changed) comes from the
+#      job-side detect_affected_initiatives.py step below, so this workflow stays correct
+#      even if invoked without a paths filter (it just finds nothing to check and exits
+#      0). This is the "minimal per-initiative configuration" the feature's AC-3 calls
+#      for: one caller workflow file total, no per-initiative job entries, regardless of
+#      how many initiatives exist in the repo.
+#   3. Ensure scripts/generate_initiative_index.py and
+#      scripts/detect_affected_initiatives.py are present at the paths this workflow
+#      expects (default: repo-root scripts/) — adjust the `run:` steps below if your repo
+#      vendors them elsewhere.
+
+name: Index Regeneration Check
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version to run the generator/detector under."
+        type: string
+        default: "3.12"
+
+permissions:
+  contents: read
+
+jobs:
+  index-drift-check:
+    name: INDEX.md drift check
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 — a shallow checkout makes `git diff --name-only <base>` unreliable
+      # for PRs with more than one commit; we need real history to diff against.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      # Changed-file detection. PR events give us the base SHA directly; push events give
+      # us `before` (the pre-push SHA); workflow_dispatch/first-push edge cases have
+      # neither, so fall back to HEAD~1 — same two-tier fallback shape as
+      # report_gate.git_changed_files (base-ref diff, else HEAD diff).
+      - name: Compute changed files
+        id: changed
+        run: |
+          set -euo pipefail
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            BASE="$(git rev-parse HEAD~1 2>/dev/null || echo "")"
+          fi
+          if [ -z "$BASE" ]; then
+            echo "::warning::no usable base ref for diff — treating all tracked files as changed"
+            git ls-files > changed_files.txt
+          else
+            git diff --name-only "$BASE...${{ github.sha }}" > changed_files.txt || \
+              git diff --name-only "$BASE...HEAD" > changed_files.txt
+          fi
+          echo "changed file count: $(wc -l < changed_files.txt)"
+
+      # Scope to only the initiative(s) whose epics/features/adrs actually changed —
+      # never a full-repo regen (epic AC-1 / feature AC-1).
+      - name: Detect affected initiatives
+        id: affected
+        run: |
+          set -euo pipefail
+          python3 scripts/detect_affected_initiatives.py \
+            --changed-files-file changed_files.txt > affected_initiatives.txt
+          count=$(wc -l < affected_initiatives.txt)
+          echo "affected initiative count: $count"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          if [ "$count" -eq 0 ]; then
+            echo "no initiative epics/features/adrs changed — nothing to check"
+          fi
+          cat affected_initiatives.txt
+
+      # Regenerate each affected initiative's INDEX.md into a scratch copy and diff it
+      # against the committed file. Read-only against the checkout — never regenerates
+      # in place, so this job cannot dirty the git working tree or accidentally commit
+      # scratch output. Failures across multiple affected initiatives are aggregated
+      # (not short-circuited) so one push touching two initiatives reports both results.
+      - name: Regenerate and diff INDEX.md per affected initiative
+        if: steps.affected.outputs.count != '0'
+        run: |
+          set -uo pipefail
+          FAILED=0
+          while IFS= read -r initiative; do
+            [ -z "$initiative" ] && continue
+
+            if [ ! -d "$initiative/epics" ]; then
+              echo "::warning::$initiative has no epics/ directory — skipping (not a valid initiative dir)"
+              continue
+            fi
+
+            if [ ! -f "$initiative/INDEX.md" ]; then
+              # Bootstrap case (feature AC-5): an initiative with no INDEX.md yet is not
+              # stale — there's nothing to be stale relative to.
+              echo "::notice::$initiative/INDEX.md not yet generated — skipping drift check (bootstrap case)"
+              continue
+            fi
+
+            scratch="$(mktemp -d)/$(basename "$initiative")"
+            mkdir -p "$scratch"
+            cp -R "$initiative"/. "$scratch"/
+
+            if ! python3 scripts/generate_initiative_index.py --initiative-path "$scratch"; then
+              echo "::error::generator failed on $initiative — see error above (likely a malformed epic/feature/ADR doc)"
+              FAILED=1
+              continue
+            fi
+
+            if ! diff -u "$initiative/INDEX.md" "$scratch/INDEX.md" > drift.diff; then
+              echo "::error file=$initiative/INDEX.md::$initiative/INDEX.md is stale — run 'python3 scripts/generate_initiative_index.py --initiative-path $initiative' and commit the result"
+              cat drift.diff
+              FAILED=1
+            else
+              echo "$initiative/INDEX.md is up to date"
+            fi
+          done < affected_initiatives.txt
+
+          if [ "$FAILED" -eq 1 ]; then
+            exit 1
+          fi

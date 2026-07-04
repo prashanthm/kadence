@@ -1,0 +1,31 @@
+github_user: prashanthm
+repos:
+  - owner: your-org
+    repo: product-workspace
+  - owner: your-org
+    repo: engineering-reports
+  - owner: your-org
+    repo: edi-artifact-registry-infra
+git:
+  # Base clone used for cross-file context reads and the optional read-only
+  # toolkit worktree (review never edits/commits/pushes).
+  primary_clone: ~/projects/product-workspace
+cadence_minutes: 15
+# Reviewers outside the merge-authority team. When non-empty, a review by one of
+# these at the current HEAD makes the loop skip (unless the operator is
+# explicitly re-requested). Empty list disables the adjacent-reviewer gate.
+adjacent_reviewers: []
+# Wait for CI on the head commit before reviewing substance (defer-to-CI rule).
+defer_to_ci: true
+agent_backend: cursor
+agent_model: ""
+state_log: ~/.local/share/ai-sdlc/pr-review-loop.log
+labels:
+  complete: pr-review-loop-complete
+  in_progress: pr-review-loop-in-progress
+report:
+  apply_labels: true
+status:
+  latest_json: ~/.local/share/ai-sdlc/pr-review-loop-latest.json
+  latest_md: ~/.local/share/ai-sdlc/pr-review-loop-latest.md
+  firing_log: ~/.local/share/ai-sdlc/pr-review-loop-firings.log
