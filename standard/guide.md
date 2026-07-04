@@ -54,7 +54,7 @@ Initiative (why, funding)                         initiatives/<slug>/initiative.
 **The agent proposes; the deterministic harness disposes.** Every reward — a green Loop AC,
 "done", a board moving to Done — is backed by a command the harness re-runs (`verify_loop_ac
 --enforce`) and an artifact it can see (`report_gate` diff-vs-claim). Never an agent's
-self-report. `ai-sdlc doctor` gates every change to the toolkit itself.
+self-report. `kadence doctor` gates every change to the toolkit itself.
 
 ## Where things live (durable vs mutable)
 

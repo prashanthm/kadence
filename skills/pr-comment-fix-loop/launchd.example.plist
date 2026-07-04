@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.ai-sdlc.pr-comment-fix-loop</string>
+  <string>com.kadence.pr-comment-fix-loop</string>
   <key>ProgramArguments</key>
   <array>
     <string>/bin/bash</string>
@@ -16,7 +16,7 @@
     <key>HOME</key>
     <string>REPLACE_WITH_HOME</string>
     <key>PR_FIX_CONFIG</key>
-    <string>REPLACE_WITH_HOME/.config/ai-sdlc/pr-comment-fix-loop.yaml</string>
+    <string>REPLACE_WITH_HOME/.config/kadence/pr-comment-fix-loop.yaml</string>
     <key>PR_FIX_TOOLKIT</key>
     <string>REPLACE_WITH_PRODUCT_WORKSPACE/kadence</string>
   </dict>
@@ -32,9 +32,9 @@
     </dict>
   </array>
   <key>StandardOutPath</key>
-  <string>REPLACE_WITH_HOME/.local/share/ai-sdlc/pr-comment-fix-loop-cron.log</string>
+  <string>REPLACE_WITH_HOME/.local/share/kadence/pr-comment-fix-loop-cron.log</string>
   <key>StandardErrorPath</key>
-  <string>REPLACE_WITH_HOME/.local/share/ai-sdlc/pr-comment-fix-loop-cron.log</string>
+  <string>REPLACE_WITH_HOME/.local/share/kadence/pr-comment-fix-loop-cron.log</string>
   <key>RunAtLoad</key>
   <false/>
 </dict>

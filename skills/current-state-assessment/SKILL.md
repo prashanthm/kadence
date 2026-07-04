@@ -154,7 +154,7 @@ Options:
   B) Skip this question — I will mark it Low confidence and note the gap
 ```
 
-2. Use `AskQuestion` tool when in Cursor. In non-interactive environments, output the gap block as plaintext and wait for the next message.
+2. Use `AskQuestion` tool when available (interactive IDE). In non-interactive environments, output the gap block as plaintext and wait for the next message.
 3. Do not proceed to write that section until the user responds.
 4. If the user provides a source: read it, add the evidence entry to the ledger (with a new EV-id), then use it.
 5. If the user skips: write the section with only the available evidence, mark every unanswered question `Low` confidence, and note what source would raise it.

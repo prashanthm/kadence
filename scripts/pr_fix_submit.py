@@ -8,6 +8,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from loop_registry import app_namespace
 from pr_fix_config import load_config, report_apply_labels, report_push, report_submit
 from pr_fix_publish import draft_report_path, load_meta, meta_path, already_published, prepare_publish_artifacts
 from pr_fix_rereview import parse_rereview_meta, requires_rereview
@@ -97,7 +98,7 @@ def publish_now(
 
     repo_slug = repo.split("/", 1)[-1]
     report = cfg.get("report") or {}
-    draft_dir = str(report.get("draft_path", "~/.local/share/ai-sdlc/pr-fix-reports"))
+    draft_dir = str(report.get("draft_path", f"~/.local/share/{app_namespace()}/pr-fix-reports"))
     ready = ready_comment_path(draft_dir, repo_slug, pr_number)
     body = ensure_attribution_in_report(
         strip_draft_header(draft_path.read_text(encoding="utf-8")), cfg
@@ -109,7 +110,7 @@ def publish_now(
         wt = Path(
             worktree_path
             or default_worktree_path(
-                str(git.get("worktree_root", "~/.local/share/ai-sdlc/worktrees")),
+                str(git.get("worktree_root", f"~/.local/share/{app_namespace()}/worktrees")),
                 repo_slug,
                 pr_number,
             )

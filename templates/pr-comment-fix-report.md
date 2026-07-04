@@ -46,7 +46,7 @@ Include the canonical table from `templates/pull-request.md`. Fill **Author** wi
 
 | Role | Model | Tool |
 |------|-------|------|
-| Author | `<agent_model or —>` | `Cursor` / `GitHub Copilot` / `Claude Code` |
+| Author | `<agent_model or —>` | `Claude Code` |
 | Spec | — | — |
 | Reviewer | — | — |
 

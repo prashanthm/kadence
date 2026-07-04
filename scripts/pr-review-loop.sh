@@ -7,7 +7,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TOOLKIT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONFIG="${PR_REVIEW_LOOP_CONFIG:-$HOME/.config/ai-sdlc/pr-review-loop.yaml}"
+NS="${KADENCE_NAMESPACE:-kadence}"
+CONFIG="${PR_REVIEW_LOOP_CONFIG:-$HOME/.config/${NS}/pr-review-loop.yaml}"
 PROMPT="$TOOLKIT_ROOT/.github/prompts/pr-review-loop.prompt.md"
 
 # shellcheck source=loop_resolve_python.sh

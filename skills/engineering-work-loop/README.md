@@ -9,7 +9,7 @@ Agent workflow: [SKILL.md](SKILL.md). Fix agent backends: [loop-agent-backends.m
 ## Prerequisites
 
 - `gh auth login`
-- **Cursor:** `agent login` (default backend), **Copilot:** `copilot login`, or **Claude:** `claude setup-token` (sets `CLAUDE_CODE_OAUTH_TOKEN`) — set `agent_backend` in operator overlay
+- **Claude:** `claude auth login` (stored session) or `claude setup-token` (sets `CLAUDE_CODE_OAUTH_TOKEN` for headless) — the only backend
 - A local git clone per repo (`repos[].clone_path`; falls back to `git.primary_clone`, auto-detected on install)
 
 See [loop-agent-backends.md](../../standard/loop-agent-backends.md) for install links.
@@ -22,7 +22,7 @@ scripts/engineering-work-loop-setup.sh run
 scripts/engineering-work-loop-setup.sh status
 ```
 
-`install` checks CLI login, creates local dirs, writes operator config overlay (merged with toolkit defaults), installs a scheduler **every 15 min**, and runs one smoke firing. On macOS it installs launchd at `:00/:15/:30/:45`; on Windows it creates a Task Scheduler job named `ai-sdlc-engineering-work-loop` that runs every 15 minutes from install time through Git Bash (firings may not align to quarter-hour marks the way launchd does). A firing still in progress when the next tick arrives is **skipped** (single-instance lock at `~/.local/share/ai-sdlc/engineering-work-loop.lock`), so slow firings never stack. Both loops fire the same ticks; each holds its own lock, so they don't block each other.
+`install` checks CLI login, creates local dirs, writes operator config overlay (merged with toolkit defaults), installs a scheduler **every 15 min**, and runs one smoke firing. On macOS it installs launchd at `:00/:15/:30/:45`; on Windows it creates a Task Scheduler job named `kadence-engineering-work-loop` that runs every 15 minutes from install time through Git Bash (firings may not align to quarter-hour marks the way launchd does). A firing still in progress when the next tick arrives is **skipped** (single-instance lock at `~/.local/share/kadence/engineering-work-loop.lock`), so slow firings never stack. Both loops fire the same ticks; each holds its own lock, so they don't block each other.
 
 On Windows, run the same setup entrypoint from Git Bash:
 
@@ -56,9 +56,9 @@ scripts/engineering-work-loop.sh
 
 | Path | Location | In git? | Purpose |
 |------|----------|---------|---------|
-| `~/.config/ai-sdlc/engineering-work-loop.yaml` | Your machine | No | Operator overlay (`github_user`, `git.primary_clone`, `agent_backend`, `agent_model`) |
-| `~/.local/share/ai-sdlc/` | Your machine | No | Worktrees, status logs, cron log |
-| `~/.local/share/ai-sdlc/engineering-work-loop-latest.md` | Your machine | No | Last firing summary (per-item outcomes) |
+| `~/.config/kadence/engineering-work-loop.yaml` | Your machine | No | Operator overlay (`github_user`, `git.primary_clone`, `agent_backend`, `agent_model`) |
+| `~/.local/share/kadence/` | Your machine | No | Worktrees, status logs, cron log |
+| `~/.local/share/kadence/engineering-work-loop-latest.md` | Your machine | No | Last firing summary (per-item outcomes) |
 
 Toolkit defaults (versioned, auto-merged): `skills/engineering-work-loop/config.example.yaml`. Per-repo `clone_path` and `max_items_per_repo` live here (the overlay serializer only writes the four machine-specific keys above) — edit the merged config or hand-edit the overlay to override them.
 
@@ -68,7 +68,7 @@ Toolkit defaults (versioned, auto-merged): `skills/engineering-work-loop/config.
 
 | Key | Purpose |
 |-----|---------|
-| `agent_backend` | `cursor`, `copilot`, or `claude` (set in operator overlay) |
+| `agent_backend` | `claude` (the only backend) |
 | `repos[].clone_path` | Local clone for each repo's worktrees (set in the merged config — **not** the minimal overlay; `--refresh-config` won't write it). Falls back to `git.primary_clone`. |
 | `repos[].base_ref` / `git.base_ref` | Branch a new worktree forks from (`repos[].base_ref` → `git.base_ref` → `origin/main`). Discovery sets `ENGINEERING_LOOP_BASE_REF` per candidate; cron threads it into the agent env. |
 | `max_items_per_repo` | Max items processed per repo per firing, sequentially (default 5) |
@@ -100,7 +100,7 @@ Cron runs `discover_engineering_work_candidates.py` before the agent. It lists `
 ```bash
 # Preview candidates without invoking the agent
 python3 scripts/discover_engineering_work_candidates.py \
-  --config ~/.config/ai-sdlc/engineering-work-loop.yaml --dry-run --json
+  --config ~/.config/kadence/engineering-work-loop.yaml --dry-run --json
 ```
 
 ## Scripts
@@ -113,7 +113,7 @@ python3 scripts/discover_engineering_work_candidates.py \
 | `discover_engineering_work_candidates.py` | Deterministic discovery + risk classification + per-repo cap |
 | `loop_check.py` | Argv-only verify helpers for auto-tier Loop AC |
 | `engineering-work-loop.sh` | Manual agent run |
-| `invoke_loop_agent.sh` | Cursor / Copilot / Claude dispatcher |
+| `invoke_loop_agent.sh` | Claude Code dispatcher |
 | `worktree_acquire.sh` / `worktree_release.sh` | Isolated git work |
 
 ## Base ref override

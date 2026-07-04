@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Invoke loop agent (Cursor or GitHub Copilot CLI) with backend-specific flags.
+# Invoke loop agent (Claude Code CLI) with backend-specific flags.
 set -euo pipefail
 
 usage() {
@@ -43,7 +43,7 @@ from loop_agent_config import normalize_agent_config, cmd_for_backend, VALID_BAC
 cfg = normalize_agent_config(load_config(os.environ['CONFIG_PY']))
 # AGENT_BACKEND_OVERRIDE lets the cron retry the same firing on a fallback backend.
 override = os.environ.get('AGENT_BACKEND_OVERRIDE', '').lower().strip()
-backend = override if override in VALID_BACKENDS else cfg.get('agent_backend', 'cursor')
+backend = override if override in VALID_BACKENDS else cfg.get('agent_backend', 'claude')
 agent_cmd = cmd_for_backend(backend, cfg)
 print('\t'.join([backend, agent_cmd, cfg.get('agent_model', '')]))
 ")
@@ -59,13 +59,6 @@ fi
 PROMPT_TEXT="$(cat "$PROMPT_FILE")"
 
 case "$BACKEND" in
-  cursor)
-    exec "$AGENT_CMD" -p --trust --force --workspace "$WORKSPACE" "$PROMPT_TEXT"
-    ;;
-  copilot)
-    export COPILOT_ALLOW_ALL="${COPILOT_ALLOW_ALL:-1}"
-    exec "$AGENT_CMD" -p "$PROMPT_TEXT" --allow-all-tools --add-dir "$WORKSPACE"
-    ;;
   claude)
     # Claude Code uses the current working directory as its workspace (no
     # --workspace flag); cd in, then grant the same dir via --add-dir.
@@ -77,7 +70,7 @@ case "$BACKEND" in
     exec "$AGENT_CMD" "${CLAUDE_ARGS[@]}"
     ;;
   *)
-    echo "error: unknown agent_backend: $BACKEND (expected cursor, copilot, or claude)" >&2
+    echo "error: unknown agent_backend: $BACKEND (expected claude)" >&2
     exit 1
     ;;
 esac

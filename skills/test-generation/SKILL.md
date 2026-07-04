@@ -33,7 +33,7 @@ code, not a separate spec-approval gate.
 6. Run the test command; report pass/fail.
 7. Do not change production code except test hooks the implementation requires.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

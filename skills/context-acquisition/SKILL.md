@@ -78,7 +78,7 @@ Options:
   B) Skip this source — it will be marked as "Gap (user skipped)" in the Source Inventory and no evidence from it will be included
 ```
 
-Use the `AskQuestion` tool when available (Cursor / interactive IDE). In non-interactive environments, output the gap block as plaintext and wait for the user's next message before continuing.
+Use the `AskQuestion` tool when available (interactive IDE). In non-interactive environments, output the gap block as plaintext and wait for the user's next message before continuing.
 
 ### Gap resolution rules
 

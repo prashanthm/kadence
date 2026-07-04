@@ -28,7 +28,7 @@ Document which features/tasks ship in a release, rollback criteria, and monitori
 4. Write scope doc to `initiatives/<slug>/.sdlc/release-scope.md`.
 5. Request human approval of the scope before integration testing proceeds.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

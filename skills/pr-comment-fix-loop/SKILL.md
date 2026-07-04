@@ -16,9 +16,9 @@ Poll GitHub for operator-authored open PRs with ≥2 non-operator review submiss
 
 ## Required Inputs
 
-- Operator overlay: `~/.config/ai-sdlc/pr-comment-fix-loop.yaml` (created by setup script; merged with toolkit `config.example.yaml`)
+- Operator overlay: `~/.config/kadence/pr-comment-fix-loop.yaml` (created by setup script; merged with toolkit `config.example.yaml`)
 - `gh` authenticated as operator
-- Local CLI login: `agent login` (Cursor) or `copilot login` (Copilot) — see loop-agent-backends.md
+- Local CLI login: `claude auth login` (Claude Code) — see loop-agent-backends.md
 - Primary clone path (`git.primary_clone` in overlay)
 - Prompt: `.github/prompts/pr-comment-fix-loop.prompt.md`
 
@@ -61,8 +61,8 @@ See [README.md](README.md) — `pr-comment-fix-loop-setup.sh install` (runs **ev
 
 | Location | Purpose |
 |----------|---------|
-| `~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.md` | Last firing (any outcome) |
-| `~/.local/share/ai-sdlc/pr-comment-fix-loop-firings.log` | JSONL history |
+| `~/.local/share/kadence/pr-comment-fix-loop-latest.md` | Last firing (any outcome) |
+| `~/.local/share/kadence/pr-comment-fix-loop-firings.log` | JSONL history |
 | `.sdlc/pr-fix-reports/<pr>-firing-latest.md` | Git evidence on PR branch |
 | `.sdlc/pr-fix-reports/<pr>-firing-<ts>.json` | Machine-readable firing record |
 

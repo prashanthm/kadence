@@ -25,7 +25,7 @@ Verify Tier 1 ADRs, architecture docs, and dev environment meet [`checklists/fou
 3. List blocking gaps before first code.
 4. Write report to manifest task outputs — no edits.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

@@ -6,7 +6,7 @@ over one shared engine (discovery, worktree, verify, report gate, config, cron/
 launchd/Task-Scheduler install). A "loop" is fully described by:
 
   name           the loop's identity — drives the cron label, config file, and
-                 state paths (com.ai-sdlc[.<inst>].<name>, <name>[-<inst>].yaml, ...)
+                 state paths (com.<namespace>[.<inst>].<name>, <name>[-<inst>].yaml, ...)
   prompt         the agent prompt file under .github/prompts/ (what the loop does)
   skill          the skill the prompt routes through (validated by report_gate)
   status_gate    the default Project Status this loop picks up (may be overridden
@@ -24,6 +24,14 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+
+
+def app_namespace() -> str:
+    """The toolkit's filesystem/label namespace. Env override KADENCE_NAMESPACE,
+    else 'kadence'. Every ~/.config, ~/.local/share, launchd-label, and
+    Windows-task-name construction routes through this so the brand lives in one
+    place. A legacy operator can keep the old layout with KADENCE_NAMESPACE=ai-sdlc."""
+    return os.environ.get("KADENCE_NAMESPACE", "").strip() or "kadence"
 
 
 @dataclass(frozen=True)
@@ -114,6 +122,7 @@ def get_loop(name: str | None = None) -> LoopDescriptor:
 
 
 __all__ = [
+    "app_namespace",
     "LoopDescriptor",
     "LOOPS",
     "FAMILY_NAME",

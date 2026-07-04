@@ -9,7 +9,7 @@ This prompt is a wrapper around `pr-review.prompt.md`. Use that prompt's finding
 - A list of repositories to scan, the acting reviewer's GitHub login, and related settings
   (`defer_to_ci`, `adjacent_reviewers`, `state_log`) — **all read from the config file at
   `$PR_REVIEW_LOOP_CONFIG`** (the wrapper script sets this env var; if unset, default to
-  `~/.config/ai-sdlc/pr-review-loop.yaml`). **Never infer the repo list or acting login any
+  `~/.config/kadence/pr-review-loop.yaml`). **Never infer the repo list or acting login any
   other way** — do not run an account-wide `gh search prs --review-requested=<you>` across every
   repo you can see; that scans repos the operator never configured this loop for. Scope strictly
   to `repos:` in the config, one `gh pr list --repo <owner>/<repo> --search

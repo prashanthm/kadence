@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
 from pr_fix_config import expand_path
 from pr_fix_publish import default_worktree_path, meta_path
 
@@ -16,19 +17,19 @@ def status_paths(cfg: dict[str, Any]) -> dict[str, Path]:
     return {
         "latest_json": Path(expand_path(st.get(
             "latest_json",
-            "~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.json",
+            f"~/.local/share/{app_namespace()}/pr-comment-fix-loop-latest.json",
         ))),
         "latest_md": Path(expand_path(st.get(
             "latest_md",
-            "~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.md",
+            f"~/.local/share/{app_namespace()}/pr-comment-fix-loop-latest.md",
         ))),
         "firing_log": Path(expand_path(st.get(
             "firing_log",
-            "~/.local/share/ai-sdlc/pr-comment-fix-loop-firings.log",
+            f"~/.local/share/{app_namespace()}/pr-comment-fix-loop-firings.log",
         ))),
         "firing_dir": Path(expand_path(st.get(
             "firing_dir",
-            "~/.local/share/ai-sdlc/firings",
+            f"~/.local/share/{app_namespace()}/firings",
         ))),
     }
 
@@ -219,7 +220,7 @@ def write_firing_report(
             git = cfg.get("git") or {}
             wt_path = Path(
                 default_worktree_path(
-                    str(git.get("worktree_root", "~/.local/share/ai-sdlc/worktrees")),
+                    str(git.get("worktree_root", f"~/.local/share/{app_namespace()}/worktrees")),
                     repo_slug,
                     int(pr_number),
                 )
@@ -234,7 +235,7 @@ def write_firing_report(
 
 
 def resolve_worktree_from_meta(cfg: dict[str, Any], repo_slug: str, pr_number: int) -> str | None:
-    draft_dir = str((cfg.get("report") or {}).get("draft_path", "~/.local/share/ai-sdlc/pr-fix-reports"))
+    draft_dir = str((cfg.get("report") or {}).get("draft_path", f"~/.local/share/{app_namespace()}/pr-fix-reports"))
     mp = meta_path(draft_dir, repo_slug, pr_number)
     if mp.exists():
         meta = json.loads(mp.read_text(encoding="utf-8"))

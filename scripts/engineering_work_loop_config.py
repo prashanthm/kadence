@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
 from pr_fix_config import (
     _load_raw,
     deep_merge,
@@ -45,7 +46,7 @@ def operator_overlay_path() -> Path:
     inst = __import__("os").environ.get("ENGINEERING_LOOP_INSTANCE", "").strip()
     stem = loop_stem()
     name = f"{stem}-{inst}.yaml" if inst else f"{stem}.yaml"
-    return Path.home() / ".config/ai-sdlc" / name
+    return Path.home() / f".config/{app_namespace()}" / name
 
 
 def resolve_config_path() -> Path:
@@ -146,11 +147,11 @@ def _normalize_config(cfg: dict[str, Any]) -> dict[str, Any]:
     _stem = loop_stem()
     cfg.setdefault(
         "state_log",
-        f"~/.local/share/ai-sdlc/{_stem}.log",
+        f"~/.local/share/{app_namespace()}/{_stem}.log",
     )
     git = cfg.get("git") or {}
     if isinstance(git, dict):
-        git.setdefault("worktree_root", "~/.local/share/ai-sdlc/worktrees")
+        git.setdefault("worktree_root", f"~/.local/share/{app_namespace()}/worktrees")
         git.setdefault("fetch_only_in_primary", True)
         git.setdefault("release_after_pr", True)
         git.setdefault("keep_worktree_on_failure", True)
@@ -178,15 +179,15 @@ def _normalize_config(cfg: dict[str, Any]) -> dict[str, Any]:
         cfg["status"] = {
             "latest_json": status.get(
                 "latest_json",
-                f"~/.local/share/ai-sdlc/{_stem}-latest.json",
+                f"~/.local/share/{app_namespace()}/{_stem}-latest.json",
             ),
             "latest_md": status.get(
                 "latest_md",
-                f"~/.local/share/ai-sdlc/{_stem}-latest.md",
+                f"~/.local/share/{app_namespace()}/{_stem}-latest.md",
             ),
             "firing_log": status.get(
                 "firing_log",
-                f"~/.local/share/ai-sdlc/{_stem}-firings.log",
+                f"~/.local/share/{app_namespace()}/{_stem}-firings.log",
             ),
         }
     from loop_agent_config import normalize_agent_config

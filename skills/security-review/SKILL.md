@@ -26,7 +26,7 @@ Review PR for security issues per [`checklists/pr-gate.md`](../../checklists/pr-
 3. Map to PR gate Security checklist items pass/fail.
 4. Write to `initiatives/<name>/.sdlc/reviews/<pr>-security.md`.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

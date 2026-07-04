@@ -19,6 +19,7 @@ from pr_review_loop_config import (
     toolkit_example_path,
     toolkit_root,
 )
+from loop_registry import app_namespace
 from pr_fix_config import _load_raw
 from pr_fix_setup import (
     detect_primary_clone,
@@ -26,13 +27,13 @@ from pr_fix_setup import (
     verify_agent_auth,
 )
 
-LAUNCHD_LABEL = "com.ai-sdlc.pr-review-loop"
+LAUNCHD_LABEL = f"com.{app_namespace()}.pr-review-loop"
 LAUNCHD_PLIST = Path.home() / "Library/LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
-WINDOWS_TASK_NAME = "ai-sdlc-pr-review-loop"
+WINDOWS_TASK_NAME = f"{app_namespace()}-pr-review-loop"
 CRON_SCRIPT_RELATIVE = Path("scripts/pr-review-loop-cron.sh")
-WINDOWS_TASK_SCRIPT = Path.home() / ".local/share/ai-sdlc/pr-review-loop-task.ps1"
-LATEST_MD = Path.home() / ".local/share/ai-sdlc/pr-review-loop-latest.md"
-CRON_LOG = Path.home() / ".local/share/ai-sdlc/pr-review-loop-cron.log"
+WINDOWS_TASK_SCRIPT = Path.home() / f".local/share/{app_namespace()}/pr-review-loop-task.ps1"
+LATEST_MD = Path.home() / f".local/share/{app_namespace()}/pr-review-loop-latest.md"
+CRON_LOG = Path.home() / f".local/share/{app_namespace()}/pr-review-loop-cron.log"
 
 
 def is_windows() -> bool:
@@ -112,20 +113,15 @@ def render_windows_task_script(toolkit: Path, cfg: dict[str, Any]) -> str:
         "$env:PR_REVIEW_LOOP_TOOLKIT=" + _ps_quote(str(toolkit)),
     ]
 
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
-    if backend == "cursor":
-        key = os.environ.get("CURSOR_API_KEY", "").strip()
-        if key:
-            lines.append("$env:CURSOR_API_KEY=" + _ps_quote(key))
-    elif backend == "claude":
-        token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-        if token:
-            lines.append("$env:CLAUDE_CODE_OAUTH_TOKEN=" + _ps_quote(token))
-        elif api_key:
-            lines.append("$env:ANTHROPIC_API_KEY=" + _ps_quote(api_key))
-    else:
-        lines.append("$env:COPILOT_ALLOW_ALL='1'")
+    ns_override = os.environ.get("KADENCE_NAMESPACE", "").strip()
+    if ns_override:
+        lines.append("$env:KADENCE_NAMESPACE=" + _ps_quote(ns_override))
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if token:
+        lines.append("$env:CLAUDE_CODE_OAUTH_TOKEN=" + _ps_quote(token))
+    elif api_key:
+        lines.append("$env:ANTHROPIC_API_KEY=" + _ps_quote(api_key))
 
     lines.append("& " + _ps_quote(bash) + " " + _ps_quote(str(cron_script)))
     return "\n".join(lines) + "\n"
@@ -145,12 +141,12 @@ def render_windows_task_command(script_path: Path) -> str:
 
 
 def ensure_dirs() -> None:
-    (Path.home() / ".config/ai-sdlc").mkdir(parents=True, exist_ok=True)
-    (Path.home() / ".local/share/ai-sdlc").mkdir(parents=True, exist_ok=True)
+    (Path.home() / f".config/{app_namespace()}").mkdir(parents=True, exist_ok=True)
+    (Path.home() / f".local/share/{app_namespace()}").mkdir(parents=True, exist_ok=True)
 
 
 def build_overlay(*, github_user: str, primary_clone: str,
-                  agent_backend: str = "cursor", agent_model: str = "") -> dict[str, Any]:
+                  agent_backend: str = "claude", agent_model: str = "") -> dict[str, Any]:
     return {
         "github_user": github_user,
         "git": {"primary_clone": primary_clone},
@@ -179,7 +175,7 @@ def refresh_overlay(refresh: bool = False) -> Path:
     overlay = build_overlay(
         github_user=gh_user(),
         primary_clone=detect_primary_clone(toolkit_root()),
-        agent_backend="cursor",
+        agent_backend="claude",
     )
     return write_overlay(overlay)
 
@@ -196,8 +192,8 @@ def verify_prereqs(cfg: dict[str, Any]) -> None:
         raise RuntimeError("gh not authenticated — run: gh auth login")
     from loop_agent_config import DEFAULT_CMD
 
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
-    configured = str(cfg.get("agent_cmd") or DEFAULT_CMD.get(backend, "agent"))
+    backend = str(cfg.get("agent_backend", "claude")).lower()
+    configured = str(cfg.get("agent_cmd") or DEFAULT_CMD.get(backend, "claude"))
     cmd = configured if shutil.which(configured) else DEFAULT_CMD.get(backend, configured)
     if shutil.which(cmd) is None:
         raise RuntimeError(f"agent binary not found: {configured} (backend={backend})")
@@ -208,7 +204,6 @@ def render_launchd_plist(toolkit: Path, cfg: dict[str, Any]) -> str:
     home = str(Path.home())
     cron_script = toolkit / CRON_SCRIPT_RELATIVE
     overlay = operator_overlay_path()
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
     user = os.environ.get("USER", Path.home().name)
 
     env_lines = [
@@ -219,19 +214,15 @@ def render_launchd_plist(toolkit: Path, cfg: dict[str, Any]) -> str:
         "    <key>PR_REVIEW_LOOP_CONFIG</key>", f"    <string>{overlay}</string>",
         "    <key>PR_REVIEW_LOOP_TOOLKIT</key>", f"    <string>{toolkit}</string>",
     ]
-    if backend == "cursor":
-        key = os.environ.get("CURSOR_API_KEY", "").strip()
-        if key:
-            env_lines += ["    <key>CURSOR_API_KEY</key>", f"    <string>{key}</string>"]
-    elif backend == "claude":
-        token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-        if token:
-            env_lines += ["    <key>CLAUDE_CODE_OAUTH_TOKEN</key>", f"    <string>{token}</string>"]
-        elif api_key:
-            env_lines += ["    <key>ANTHROPIC_API_KEY</key>", f"    <string>{api_key}</string>"]
-    else:
-        env_lines += ["    <key>COPILOT_ALLOW_ALL</key>", "    <string>1</string>"]
+    ns_override = os.environ.get("KADENCE_NAMESPACE", "").strip()
+    if ns_override:
+        env_lines += ["    <key>KADENCE_NAMESPACE</key>", f"    <string>{ns_override}</string>"]
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if token:
+        env_lines += ["    <key>CLAUDE_CODE_OAUTH_TOKEN</key>", f"    <string>{token}</string>"]
+    elif api_key:
+        env_lines += ["    <key>ANTHROPIC_API_KEY</key>", f"    <string>{api_key}</string>"]
 
     env_block = "\n".join(env_lines)
     return f"""<?xml version="1.0" encoding="UTF-8"?>

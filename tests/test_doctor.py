@@ -1,4 +1,4 @@
-"""Tests for the ai-sdlc doctor validation harness (v2)."""
+"""Tests for the kadence doctor validation harness (v2)."""
 from __future__ import annotations
 
 import sys

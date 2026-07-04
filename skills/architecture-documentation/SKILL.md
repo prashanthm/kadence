@@ -28,7 +28,7 @@ Produce architecture documentation: system context, container/component views, k
 4. Write under `docs/architecture/` — one file per view or combined overview.
 5. Flag gaps needing ADR decisions.
 
-## Multi-Agent Delegation (Cursor)
+## Multi-Agent Delegation
 
 | Field | Value |
 |-------|-------|

@@ -37,7 +37,7 @@ it can see. Never by an agent's self-report.
 (ported clean, compliance stripped) as a four-loop family (spec-loop, implement-loop,
 pr-review-loop, pr-comment-fix-loop), the enforcement layer (`--enforce` verify +
 `report_gate`), the 3-layer authoring skills + templates, and the GitHub board automation.
-`ai-sdlc doctor` gates every change (212 tests green).
+`kadence doctor` gates every change (311 tests).
 
 ```
 python3 scripts/doctor.py          # tests + engine imports + skill-registry + instrumentation

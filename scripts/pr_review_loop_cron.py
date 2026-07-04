@@ -73,8 +73,8 @@ def run_agent_with_fallback(
     *,
     force_pr: int | None = None,
 ) -> tuple[int, str, str]:
-    """Run the agent, falling through cursor->copilot->claude on failure.
-    Returns (exit_code, combined_output, backend_used)."""
+    """Run the agent. Claude is the only backend, so the fallback chain has a single
+    entry — this tries claude once. Returns (exit_code, combined_output, backend_used)."""
     from loop_agent_config import BACKEND_FALLBACK_CHAIN
 
     last: tuple[int, str, str] = (1, "no backend attempted", BACKEND_FALLBACK_CHAIN[0])

@@ -20,7 +20,7 @@ git:
   primary_clone: ~/projects/product-workspace
   # Default fork branch for worktrees when repos[].base_ref is unset (default origin/main).
   # base_ref: origin/main
-  worktree_root: ~/.local/share/ai-sdlc/worktrees
+  worktree_root: ~/.local/share/kadence/worktrees
   fetch_only_in_primary: true
   release_after_pr: true
   keep_worktree_on_failure: true
@@ -111,13 +111,13 @@ project:
   org: your-org
   number:
   status_gates: []
-agent_backend: cursor
+agent_backend: claude
 agent_model: ""
 # Log/status paths are LEFT UNSET so they derive per-loop from the active loop name
 # (implement-loop.log, spec-loop-latest.md, ...), keeping family members from
 # clobbering each other. Override here only if you want a fixed custom path.
-# state_log: ~/.local/share/ai-sdlc/<loop>.log
+# state_log: ~/.local/share/kadence/<loop>.log
 # status:
-#   latest_json: ~/.local/share/ai-sdlc/<loop>-latest.json
-#   latest_md: ~/.local/share/ai-sdlc/<loop>-latest.md
-#   firing_log: ~/.local/share/ai-sdlc/<loop>-firings.log
+#   latest_json: ~/.local/share/kadence/<loop>-latest.json
+#   latest_md: ~/.local/share/kadence/<loop>-latest.md
+#   firing_log: ~/.local/share/kadence/<loop>-firings.log

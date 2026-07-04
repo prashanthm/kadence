@@ -26,7 +26,7 @@ Commands:
 
 Platform schedulers:
   macOS   launchd at :00/:15/:30/:45
-  Windows Task Scheduler every 15 min (task: ai-sdlc-<loop> or ai-sdlc-<inst>-<loop>)
+  Windows Task Scheduler every 15 min (task: kadence-<loop> or kadence-<inst>-<loop>)
 
 Install options (pass after install):
   --refresh-config   Merge new keys from toolkit config.example.yaml
@@ -34,8 +34,7 @@ Install options (pass after install):
   --skip-smoke       Do not run cron after install
 
 Examples:
-  agent login                  # once, before install (Cursor)
-  copilot login                # once, before install (Copilot)
+  claude auth login            # once, before install (Claude Code)
   engineering-work-loop-setup.sh install
   engineering-work-loop-setup.sh run
   engineering-work-loop-setup.sh status

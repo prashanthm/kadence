@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""``ai-sdlc doctor`` — prove the loop, tests, and skill registry still run (v2).
+"""``kadence doctor`` — prove the loop, tests, and skill registry still run (v2).
 
 A single smoke command run in CI and after any skill/loop change. Exits non-zero on
 the first regression so a change that breaks the loop or the skill wiring fails the PR.
@@ -173,7 +173,7 @@ def check_no_status_sync(root: Path, res: Result) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(description="ai-sdlc doctor — loop/tests/registry smoke.")
+    p = argparse.ArgumentParser(description="kadence doctor — loop/tests/registry smoke.")
     p.add_argument("--root", help="Toolkit root (default: parent of scripts/).")
     p.add_argument("--skip-tests", action="store_true", help="Skip the pytest run (fast checks only).")
     p.add_argument(

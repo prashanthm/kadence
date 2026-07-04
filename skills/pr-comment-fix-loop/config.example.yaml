@@ -12,11 +12,11 @@ labels:
   in_progress: pr-fix-cycle-in-progress
   deferred: pr-fix-deferred
   needs_human: pr-fix-needs-human
-state_log: ~/.local/share/ai-sdlc/pr-comment-fix-loop.log
+state_log: ~/.local/share/kadence/pr-comment-fix-loop.log
 in_progress_stale_hours: 2
 git:
   primary_clone: ~/projects/product-workspace
-  worktree_root: ~/.local/share/ai-sdlc/worktrees
+  worktree_root: ~/.local/share/kadence/worktrees
 repos:
   - owner: your-org
     repo: product-workspace
@@ -36,15 +36,15 @@ report:
   submit: true
   push: true
   apply_labels: true
-  draft_path: ~/.local/share/ai-sdlc/pr-fix-reports
+  draft_path: ~/.local/share/kadence/pr-fix-reports
   branch_draft_dir: .sdlc/pr-fix-reports
 status:
-  latest_json: ~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.json
-  latest_md: ~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.md
-  firing_log: ~/.local/share/ai-sdlc/pr-comment-fix-loop-firings.log
-  firing_dir: ~/.local/share/ai-sdlc/firings
+  latest_json: ~/.local/share/kadence/pr-comment-fix-loop-latest.json
+  latest_md: ~/.local/share/kadence/pr-comment-fix-loop-latest.md
+  firing_log: ~/.local/share/kadence/pr-comment-fix-loop-firings.log
+  firing_dir: ~/.local/share/kadence/firings
 cadence_minutes: 15
 max_items_per_firing: 1
-# agent_backend: cursor | copilot | claude
-agent_backend: cursor
+# agent_backend: claude (Claude Code — the only supported backend)
+agent_backend: claude
 agent_model: ""

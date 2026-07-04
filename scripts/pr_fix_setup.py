@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
 from pr_fix_config import (
     _load_raw,
     deep_merge_missing,
@@ -22,15 +23,15 @@ from pr_fix_config import (
 
 
 LOCAL_STATE_DIRS = [
-    Path("~/.local/share/ai-sdlc/worktrees"),
-    Path("~/.local/share/ai-sdlc/pr-fix-reports"),
-    Path("~/.local/share/ai-sdlc/firings"),
+    Path(f"~/.local/share/{app_namespace()}/worktrees"),
+    Path(f"~/.local/share/{app_namespace()}/pr-fix-reports"),
+    Path(f"~/.local/share/{app_namespace()}/firings"),
 ]
 
-LAUNCHD_LABEL = "com.ai-sdlc.pr-comment-fix-loop"
+LAUNCHD_LABEL = f"com.{app_namespace()}.pr-comment-fix-loop"
 LAUNCHD_PLIST = Path.home() / "Library/LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
-LATEST_MD = Path.home() / ".local/share/ai-sdlc/pr-comment-fix-loop-latest.md"
-CRON_LOG = Path.home() / ".local/share/ai-sdlc/pr-comment-fix-loop-cron.log"
+LATEST_MD = Path.home() / f".local/share/{app_namespace()}/pr-comment-fix-loop-latest.md"
+CRON_LOG = Path.home() / f".local/share/{app_namespace()}/pr-comment-fix-loop-cron.log"
 
 
 def _expand(path: Path) -> Path:
@@ -60,7 +61,7 @@ def detect_primary_clone(toolkit: Path) -> str:
 
 
 def ensure_dirs() -> None:
-    _expand(Path("~/.config/ai-sdlc")).mkdir(parents=True, exist_ok=True)
+    _expand(Path(f"~/.config/{app_namespace()}")).mkdir(parents=True, exist_ok=True)
     for d in LOCAL_STATE_DIRS:
         _expand(d).mkdir(parents=True, exist_ok=True)
 
@@ -69,7 +70,7 @@ def build_overlay(
     *,
     github_user: str,
     primary_clone: str,
-    agent_backend: str = "cursor",
+    agent_backend: str = "claude",
     agent_model: str = "",
 ) -> dict[str, Any]:
     return {
@@ -104,67 +105,49 @@ def refresh_overlay(refresh: bool = False) -> Path:
     overlay = build_overlay(
         github_user=gh_user(),
         primary_clone=detect_primary_clone(toolkit_root()),
-        agent_backend="cursor",
+        agent_backend="claude",
     )
     return write_overlay(overlay)
 
 
 def verify_agent_auth(backend: str, cmd: str) -> None:
-    if backend == "cursor":
+    # Claude Code is the only backend. Accept, in order: (1) an explicit env
+    # token/key (for CI or headless boxes with no interactive login), (2) Claude
+    # Code's own stored login — the CLI runs headless under launchd using
+    # ~/.claude credentials as long as HOME is preserved (the plist sets HOME).
+    # Only fail if none of these are present.
+    if (
+        os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
+        or os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    ):
+        return
+    # Stored login check — prefer `claude auth status`, fall back to the
+    # oauthAccount marker in ~/.claude.json.
+    try:
         proc = subprocess.run(
-            [cmd, "status"],
-            capture_output=True,
-            text=True,
-            check=False,
+            [cmd, "auth", "status"], capture_output=True, text=True, timeout=30
         )
         out = (proc.stdout or "") + (proc.stderr or "")
-        if proc.returncode != 0 or "Logged in" not in out:
-            raise RuntimeError(
-                f"Cursor CLI not logged in — run: {cmd} login"
-            )
-        return
-
-    if backend == "claude":
-        # Accept, in order: (1) an explicit env token/key (for CI or headless boxes
-        # with no interactive login), (2) Claude Code's own stored login — the CLI
-        # runs headless under launchd using ~/.claude credentials as long as HOME is
-        # preserved (the plist sets HOME). Only fail if none of these are present.
-        if (
-            os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
-            or os.environ.get("ANTHROPIC_API_KEY", "").strip()
+        if proc.returncode == 0 and (
+            "logged in" in out.lower() or "authenticated" in out.lower()
         ):
             return
-        # Stored login check — prefer `claude auth status`, fall back to the
-        # oauthAccount marker in ~/.claude.json.
+    except (OSError, subprocess.SubprocessError):
+        pass
+    claude_json = Path.home() / ".claude.json"
+    if claude_json.is_file():
         try:
-            proc = subprocess.run(
-                [cmd, "auth", "status"], capture_output=True, text=True, timeout=30
-            )
-            out = (proc.stdout or "") + (proc.stderr or "")
-            if proc.returncode == 0 and (
-                "logged in" in out.lower() or "authenticated" in out.lower()
-            ):
+            import json as _json
+
+            if _json.loads(claude_json.read_text()).get("oauthAccount"):
                 return
-        except (OSError, subprocess.SubprocessError):
+        except (OSError, ValueError):
             pass
-        claude_json = Path.home() / ".claude.json"
-        if claude_json.is_file():
-            try:
-                import json as _json
-
-                if _json.loads(claude_json.read_text()).get("oauthAccount"):
-                    return
-            except (OSError, ValueError):
-                pass
-        raise RuntimeError(
-            "Claude Code auth not found — run `claude auth login` (uses your stored "
-            "Claude Code session), or `claude setup-token` + export "
-            "CLAUDE_CODE_OAUTH_TOKEN (or set ANTHROPIC_API_KEY) for a headless box."
-        )
-
-    copilot_dir = Path.home() / ".copilot"
-    if not copilot_dir.is_dir():
-        raise RuntimeError("Copilot CLI not set up — run: copilot login")
+    raise RuntimeError(
+        "Claude Code auth not found — run `claude auth login` (uses your stored "
+        "Claude Code session), or `claude setup-token` + export "
+        "CLAUDE_CODE_OAUTH_TOKEN (or set ANTHROPIC_API_KEY) for a headless box."
+    )
 
 
 def verify_prereqs(cfg: dict[str, Any]) -> None:
@@ -172,10 +155,10 @@ def verify_prereqs(cfg: dict[str, Any]) -> None:
     if proc.returncode != 0:
         raise RuntimeError("gh not authenticated — run: gh auth login")
 
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
+    backend = str(cfg.get("agent_backend", "claude")).lower()
     from loop_agent_config import DEFAULT_CMD
 
-    configured = str(cfg.get("agent_cmd") or DEFAULT_CMD.get(backend, "agent"))
+    configured = str(cfg.get("agent_cmd") or DEFAULT_CMD.get(backend, "claude"))
     cmd = configured if shutil.which(configured) else DEFAULT_CMD.get(backend, configured)
     if shutil.which(cmd) is None:
         raise RuntimeError(f"agent binary not found: {configured} (backend={backend})")
@@ -187,7 +170,6 @@ def render_launchd_plist(toolkit: Path, cfg: dict[str, Any]) -> str:
     home = str(Path.home())
     cron_script = toolkit / "scripts/pr-comment-fix-loop-cron.sh"
     overlay = operator_overlay_path()
-    backend = str(cfg.get("agent_backend", "cursor")).lower()
     user = os.environ.get("USER", Path.home().name)
 
     env_lines = [
@@ -202,39 +184,32 @@ def render_launchd_plist(toolkit: Path, cfg: dict[str, Any]) -> str:
         "    <key>PR_FIX_TOOLKIT</key>",
         f"    <string>{toolkit}</string>",
     ]
-    if backend == "cursor":
-        key = os.environ.get("CURSOR_API_KEY", "").strip()
-        if key:
-            env_lines.extend(
-                [
-                    "    <key>CURSOR_API_KEY</key>",
-                    f"    <string>{key}</string>",
-                ]
-            )
-    elif backend == "claude":
-        # Claude Code auth under launchd: prefer the long-lived OAuth token
-        # (claude setup-token), fall back to an API key.
-        token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
-        api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
-        if token:
-            env_lines.extend(
-                [
-                    "    <key>CLAUDE_CODE_OAUTH_TOKEN</key>",
-                    f"    <string>{token}</string>",
-                ]
-            )
-        elif api_key:
-            env_lines.extend(
-                [
-                    "    <key>ANTHROPIC_API_KEY</key>",
-                    f"    <string>{api_key}</string>",
-                ]
-            )
-    else:
+    # Namespace override — only when set, so the cron'd loop resolves the same
+    # config/state/label namespace as install time (default 'kadence' needs nothing).
+    ns_override = os.environ.get("KADENCE_NAMESPACE", "").strip()
+    if ns_override:
         env_lines.extend(
             [
-                "    <key>COPILOT_ALLOW_ALL</key>",
-                "    <string>1</string>",
+                "    <key>KADENCE_NAMESPACE</key>",
+                f"    <string>{ns_override}</string>",
+            ]
+        )
+    # Claude Code auth under launchd: prefer the long-lived OAuth token
+    # (claude setup-token), fall back to an API key.
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "").strip()
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if token:
+        env_lines.extend(
+            [
+                "    <key>CLAUDE_CODE_OAUTH_TOKEN</key>",
+                f"    <string>{token}</string>",
+            ]
+        )
+    elif api_key:
+        env_lines.extend(
+            [
+                "    <key>ANTHROPIC_API_KEY</key>",
+                f"    <string>{api_key}</string>",
             ]
         )
 
@@ -364,7 +339,7 @@ def cmd_status(_args: argparse.Namespace) -> int:
     print(f"toolkit example: {example}")
     print(f"operator overlay: {overlay} ({'exists' if overlay.is_file() else 'missing'})")
     print(f"launchd loaded: {launchd_loaded()}")
-    print("local state: ~/.local/share/ai-sdlc/")
+    print(f"local state: ~/.local/share/{app_namespace()}/")
     print("repo evidence: .sdlc/pr-fix-reports/ (on PR branch)")
     if LATEST_MD.is_file():
         print(f"\n--- {LATEST_MD} ---\n")

@@ -12,7 +12,8 @@ usage() {
 PRIMARY_CLONE="$(cd "$1" && pwd)"
 ITEM_ID="$2"
 FORCE="${3:-}"
-WORKTREE_ROOT="${WORKTREE_ROOT:-$HOME/.local/share/ai-sdlc/worktrees}"
+NS="${KADENCE_NAMESPACE:-kadence}"
+WORKTREE_ROOT="${WORKTREE_ROOT:-$HOME/.local/share/${NS}/worktrees}"
 REPO_SLUG="$(basename "$PRIMARY_CLONE")"
 WT_PATH="$WORKTREE_ROOT/$REPO_SLUG/$ITEM_ID"
 

@@ -8,7 +8,7 @@ pr-comment-fix-loop are self-hosted (no shared engine, no registry) — this mod
 gives them the same protection keyed off a fixed loop name instead.
 
 NOTE: `pr-review-loop-cron.sh` / `pr-comment-fix-loop-cron.sh` already carry their own
-mkdir-based single-instance lock at `~/.local/share/ai-sdlc/<loop-name>.lock` (a
+mkdir-based single-instance lock at `~/.local/share/<namespace>/<loop-name>.lock` (a
 DIRECTORY containing a `pid` file, with PID-liveness + mtime-based staleness reaping —
 predates this module). This lock is a SEPARATE, complementary guard for direct Python
 invocation (bypassing the .sh wrapper, e.g. tests or a future non-shell entry point) —
@@ -21,9 +21,11 @@ import contextlib
 import os
 from pathlib import Path
 
+from loop_registry import app_namespace
+
 
 def _lock_path(loop_name: str) -> Path:
-    d = Path.home() / ".local/share/ai-sdlc"
+    d = Path.home() / f".local/share/{app_namespace()}"
     return d / f"{loop_name}.pylock"
 
 

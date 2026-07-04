@@ -1,4 +1,4 @@
-# Self-CI: `ai-sdlc doctor` gates every change to the toolkit.
+# Self-CI: `kadence doctor` gates every change to the toolkit.
 name: Doctor
 
 on:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   doctor:
-    name: ai-sdlc doctor
+    name: kadence doctor
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,5 +18,5 @@ jobs:
           python-version: "3.12"
       - name: Install test deps
         run: pip install pytest
-      - name: Run ai-sdlc doctor
+      - name: Run kadence doctor
         run: python3 scripts/doctor.py

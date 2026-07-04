@@ -14,7 +14,8 @@ resolve_python
 # so a crashed firing (trap EXIT never ran) is reaped immediately rather than
 # blocking for the full stale window. Falls back to an mtime threshold when the
 # PID is unknown/unreadable.
-LOCK_DIR="${PR_REVIEW_LOOP_LOCK_DIR:-${HOME}/.local/share/ai-sdlc/pr-review-loop.lock}"
+NS="${KADENCE_NAMESPACE:-kadence}"
+LOCK_DIR="${PR_REVIEW_LOOP_LOCK_DIR:-${HOME}/.local/share/${NS}/pr-review-loop.lock}"
 LOCK_STALE_MIN="${PR_REVIEW_LOOP_LOCK_STALE_MIN:-120}"
 mkdir -p "$(dirname "$LOCK_DIR")"
 if [[ -d "$LOCK_DIR" ]]; then

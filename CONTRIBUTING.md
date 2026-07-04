@@ -22,7 +22,7 @@ main  ────────────────────────�
 
 ## The gate
 
-Every change must keep **`ai-sdlc doctor`** green — it runs the test suite, checks the loop
+Every change must keep **`kadence doctor`** green — it runs the test suite, checks the loop
 engine imports, validates skill-registry integrity (no dangling handler/skill links), and
 round-trips the event log. CI runs it on every PR.
 

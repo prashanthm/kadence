@@ -6,6 +6,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from loop_registry import app_namespace
+
 
 def expand_path(value: str) -> str:
     return str(Path(value).expanduser())
@@ -34,7 +36,7 @@ def toolkit_example_path(root: Path | None = None) -> Path:
 
 
 def operator_overlay_path() -> Path:
-    return Path.home() / ".config/ai-sdlc/pr-comment-fix-loop.yaml"
+    return Path.home() / f".config/{app_namespace()}/pr-comment-fix-loop.yaml"
 
 
 def resolve_config_path() -> Path:
@@ -112,7 +114,7 @@ def dump_overlay_yaml(cfg: dict[str, Any]) -> str:
         f"github_user: {cfg.get('github_user', '')}",
         "git:",
         f"  primary_clone: {cfg.get('git', {}).get('primary_clone', '')}",
-        f"agent_backend: {cfg.get('agent_backend', 'cursor')}",
+        f"agent_backend: {cfg.get('agent_backend', 'claude')}",
     ]
     model = str(cfg.get("agent_model") or "")
     if model:
@@ -234,7 +236,7 @@ def _normalize_config(cfg: dict[str, Any]) -> dict[str, Any]:
         cfg["repos"] = []
     cfg.setdefault(
         "state_log",
-        "~/.local/share/ai-sdlc/pr-comment-fix-loop.log",
+        f"~/.local/share/{app_namespace()}/pr-comment-fix-loop.log",
     )
     ctx = cfg.get("context") or {}
     if isinstance(ctx, dict):
@@ -254,7 +256,7 @@ def _normalize_config(cfg: dict[str, Any]) -> dict[str, Any]:
             "apply_labels": report.get("apply_labels", submit),
             "draft_path": report.get(
                 "draft_path",
-                "~/.local/share/ai-sdlc/pr-fix-reports",
+                f"~/.local/share/{app_namespace()}/pr-fix-reports",
             ),
             "branch_draft_dir": report.get(
                 "branch_draft_dir", ".sdlc/pr-fix-reports"
@@ -265,19 +267,19 @@ def _normalize_config(cfg: dict[str, Any]) -> dict[str, Any]:
         cfg["status"] = {
             "latest_json": status.get(
                 "latest_json",
-                "~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.json",
+                f"~/.local/share/{app_namespace()}/pr-comment-fix-loop-latest.json",
             ),
             "latest_md": status.get(
                 "latest_md",
-                "~/.local/share/ai-sdlc/pr-comment-fix-loop-latest.md",
+                f"~/.local/share/{app_namespace()}/pr-comment-fix-loop-latest.md",
             ),
             "firing_log": status.get(
                 "firing_log",
-                "~/.local/share/ai-sdlc/pr-comment-fix-loop-firings.log",
+                f"~/.local/share/{app_namespace()}/pr-comment-fix-loop-firings.log",
             ),
             "firing_dir": status.get(
                 "firing_dir",
-                "~/.local/share/ai-sdlc/firings",
+                f"~/.local/share/{app_namespace()}/firings",
             ),
         }
     from loop_agent_config import normalize_agent_config

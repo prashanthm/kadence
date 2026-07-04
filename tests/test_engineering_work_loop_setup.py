@@ -44,20 +44,20 @@ def test_build_overlay_shape():
     cfg = build_overlay(
         github_user="alice",
         primary_clone="/tmp/repo",
-        agent_backend="copilot",
+        agent_backend="claude",
     )
     assert cfg["github_user"] == "alice"
     assert cfg["git"]["primary_clone"] == "/tmp/repo"
-    assert cfg["agent_backend"] == "copilot"
+    assert cfg["agent_backend"] == "claude"
 
 
 def test_render_launchd_plist_includes_paths():
     toolkit = toolkit_root()
     plist = render_launchd_plist(
         toolkit,
-        {"agent_backend": "cursor"},
+        {"agent_backend": "claude"},
     )
-    assert launchd_label() == "com.ai-sdlc.implement-loop"
+    assert launchd_label() == "com.kadence.implement-loop"
     assert "engineering-work-loop-cron.sh" in plist
     assert "ENGINEERING_LOOP_CONFIG" in plist
     assert "ENGINEERING_LOOP_TOOLKIT" in plist
@@ -72,14 +72,14 @@ def test_render_windows_task_script_includes_env(monkeypatch, tmp_path):
     git_bash.parent.mkdir(parents=True)
     git_bash.write_text("")
     monkeypatch.setenv("ProgramFiles", str(tmp_path))
-    monkeypatch.setenv("CURSOR_API_KEY", "cursor-key")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "claude-token")
     monkeypatch.setattr(setup.shutil, "which", lambda name: None)
 
     script = setup.render_windows_task_script(toolkit_root(), load_config(EXAMPLE))
 
     assert "ENGINEERING_LOOP_CONFIG" in script
     assert "ENGINEERING_LOOP_TOOLKIT" in script
-    assert "CURSOR_API_KEY" in script
+    assert "CLAUDE_CODE_OAUTH_TOKEN" in script
     assert "engineering-work-loop-cron.sh" in script
     assert str(git_bash) in script
     # loop name + prompt injected (parity with the launchd plist); default loop.
@@ -116,7 +116,7 @@ def test_render_windows_task_command_uses_powershell_file_invocation(tmp_path):
 
 def test_render_windows_task_command_stays_under_schtasks_limit(monkeypatch):
     long_home = "C:/Users/operator-with-a-very-long-profile-name"
-    script_path = Path(long_home) / ".local/share/ai-sdlc/engineering-work-loop-task.ps1"
+    script_path = Path(long_home) / ".local/share/kadence/engineering-work-loop-task.ps1"
     cmd = setup.render_windows_task_command(script_path)
     assert len(cmd) < 261
 
@@ -298,7 +298,7 @@ def test_load_config_merges_status_defaults(tmp_path, monkeypatch):
         "github_user: bob\n"
         "git:\n"
         "  primary_clone: /tmp/repo\n"
-        "agent_backend: cursor\n",
+        "agent_backend: claude\n",
         encoding="utf-8",
     )
     overlay = tmp_path / "engineering-work-loop.yaml"
@@ -349,17 +349,24 @@ def test_resolve_repo_clones(tmp_path):
 
 
 def test_render_launchd_plist_optional_api_key():
-    prev = os.environ.get("CURSOR_API_KEY")
-    os.environ["CURSOR_API_KEY"] = "test-key"
+    # Claude is the only backend. With no OAuth token but an API key present, the
+    # plist injects ANTHROPIC_API_KEY (the fallback auth path).
+    prev_key = os.environ.get("ANTHROPIC_API_KEY")
+    prev_tok = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN")
+    os.environ.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
+    os.environ["ANTHROPIC_API_KEY"] = "test-key"
     try:
-        plist = render_launchd_plist(toolkit_root(), {"agent_backend": "cursor"})
-        assert "CURSOR_API_KEY" in plist
+        plist = render_launchd_plist(toolkit_root(), {"agent_backend": "claude"})
+        assert "ANTHROPIC_API_KEY" in plist
         assert "test-key" in plist
+        assert "CURSOR_API_KEY" not in plist
     finally:
-        if prev is None:
-            os.environ.pop("CURSOR_API_KEY", None)
+        if prev_key is None:
+            os.environ.pop("ANTHROPIC_API_KEY", None)
         else:
-            os.environ["CURSOR_API_KEY"] = prev
+            os.environ["ANTHROPIC_API_KEY"] = prev_key
+        if prev_tok is not None:
+            os.environ["CLAUDE_CODE_OAUTH_TOKEN"] = prev_tok
 
 
 # --- multi-instance support (v2) ---
@@ -373,17 +380,17 @@ def test_default_loop_is_implement_loop(monkeypatch):
     # the family umbrella, not a concrete loop). Bare install → implement-loop.
     monkeypatch.delenv("ENGINEERING_LOOP_INSTANCE", raising=False)
     monkeypatch.delenv("ENGINEERING_LOOP_NAME", raising=False)
-    assert _setup_mod.launchd_label() == "com.ai-sdlc.implement-loop"
+    assert _setup_mod.launchd_label() == "com.kadence.implement-loop"
     assert _cfg_mod.operator_overlay_path().name == "implement-loop.yaml"
-    assert _setup_mod.windows_task_name() == "ai-sdlc-implement-loop"
+    assert _setup_mod.windows_task_name() == "kadence-implement-loop"
 
 
 def test_spec_loop_identifiers(monkeypatch):
     monkeypatch.delenv("ENGINEERING_LOOP_INSTANCE", raising=False)
     monkeypatch.setenv("ENGINEERING_LOOP_NAME", "spec-loop")
-    assert _setup_mod.launchd_label() == "com.ai-sdlc.spec-loop"
+    assert _setup_mod.launchd_label() == "com.kadence.spec-loop"
     assert _cfg_mod.operator_overlay_path().name == "spec-loop.yaml"
-    assert _setup_mod.windows_task_name() == "ai-sdlc-spec-loop"
+    assert _setup_mod.windows_task_name() == "kadence-spec-loop"
 
 
 def test_loops_have_separate_logs(monkeypatch):
@@ -406,11 +413,11 @@ def test_loops_have_separate_logs(monkeypatch):
 def test_named_instance_suffixes_all_identifiers(monkeypatch):
     monkeypatch.setenv("ENGINEERING_LOOP_INSTANCE", "v2")
     monkeypatch.delenv("ENGINEERING_LOOP_NAME", raising=False)  # default implement-loop
-    assert _setup_mod.launchd_label() == "com.ai-sdlc-v2.implement-loop"
-    assert _setup_mod.launchd_plist().name == "com.ai-sdlc-v2.implement-loop.plist"
+    assert _setup_mod.launchd_label() == "com.kadence-v2.implement-loop"
+    assert _setup_mod.launchd_plist().name == "com.kadence-v2.implement-loop.plist"
     assert _cfg_mod.operator_overlay_path().name == "implement-loop-v2.yaml"
     assert _setup_mod.latest_md().name == "implement-loop-latest-v2.md"
-    assert _setup_mod.windows_task_name() == "ai-sdlc-v2-implement-loop"
+    assert _setup_mod.windows_task_name() == "kadence-v2-implement-loop"
     # worktree root and reports dir are suffixed too (no collision with the default)
     dirs = [d.name for d in _setup_mod.local_state_dirs()]
     assert "worktrees-v2" in dirs
@@ -425,7 +432,7 @@ def test_plist_injects_base_ref_instance_and_loop(monkeypatch):
         toolkit_root(),
         {"agent_backend": "claude", "git": {"base_ref": "origin/phase2"}},
     )
-    assert "com.ai-sdlc-v2.spec-loop" in plist
+    assert "com.kadence-v2.spec-loop" in plist
     assert "ENGINEERING_LOOP_INSTANCE" in plist and ">v2<" in plist
     assert "ENGINEERING_LOOP_NAME" in plist and ">spec-loop<" in plist
     assert "ENGINEERING_LOOP_PROMPT" in plist and "spec-loop.prompt.md" in plist
@@ -436,5 +443,5 @@ def test_plist_omits_base_ref_when_unset(monkeypatch):
     from engineering_work_loop_config import toolkit_root
     monkeypatch.delenv("ENGINEERING_LOOP_INSTANCE", raising=False)
     monkeypatch.delenv("ENGINEERING_LOOP_BASE_REF", raising=False)
-    plist = _setup_mod.render_launchd_plist(toolkit_root(), {"agent_backend": "cursor"})
+    plist = _setup_mod.render_launchd_plist(toolkit_root(), {"agent_backend": "claude"})
     assert "ENGINEERING_LOOP_BASE_REF" not in plist

@@ -59,7 +59,7 @@ the configured agent (`agent_backend` / `agent_model` from config).
 
 | Role | Model | Tool |
 |------|-------|------|
-| Author | `<agent_model or —>` | `Cursor` / `GitHub Copilot` / `Claude Code` |
+| Author | `<agent_model or —>` | `Claude Code` |
 | Spec | — | — |
 | Reviewer | — | — |
 

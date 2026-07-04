@@ -89,6 +89,15 @@ def test_gate_blocks_windows_user_path(tmp_path):
 
 
 def test_gate_blocks_worktree_tilde_path(tmp_path):
+    # Active namespace (kadence) worktree path must be scrubbed.
+    report = _report() + "\nworktree: ~/.local/share/kadence/worktrees/repo/1\n"
+    reasons = gate(report, _skills_dir(tmp_path, "implement"), check_diff=False)
+    assert any("PII" in r for r in reasons)
+
+
+def test_gate_blocks_legacy_ai_sdlc_tilde_path(tmp_path):
+    # Legacy 'ai-sdlc' state path stays blocked too (defense-in-depth: reports
+    # authored on the old layout, or with KADENCE_NAMESPACE=ai-sdlc, must not leak).
     report = _report() + "\nworktree: ~/.local/share/ai-sdlc/worktrees/repo/1\n"
     reasons = gate(report, _skills_dir(tmp_path, "implement"), check_diff=False)
     assert any("PII" in r for r in reasons)

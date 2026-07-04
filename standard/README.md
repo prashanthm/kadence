@@ -44,7 +44,7 @@ There is no `roadmap.md`. A schedule changes, so it lives in GitHub.
 
 ## The enforcement principle
 
-**The agent proposes; the deterministic harness disposes.** `ai-sdlc doctor` gates every change; the
+**The agent proposes; the deterministic harness disposes.** `kadence doctor` gates every change; the
 loop re-runs every `verify:` itself; a green acceptance criterion requires an exit-0 command, never an
 agent's self-check. Metadata-only outcomes do not count as delivered work.
 
