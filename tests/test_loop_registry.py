@@ -1,4 +1,4 @@
-"""Tests for loop_registry.py — the engineering-work-loop family descriptors."""
+"""Tests for loop_registry.py — the kloop (engineering-work-loop) family descriptors."""
 from __future__ import annotations
 
 import sys
@@ -24,7 +24,10 @@ def test_default_and_family_resolve_to_implement_loop(monkeypatch):
     monkeypatch.delenv("ENGINEERING_LOOP_NAME", raising=False)
     assert reg.resolve_loop_name(None) == "implement-loop"
     assert reg.resolve_loop_name("") == "implement-loop"
-    # the family umbrella name is not a concrete loop → default member
+    # the family umbrella name is not a concrete loop → default member.
+    # Both the current brand ('kloop') and the legacy name resolve.
+    assert reg.FAMILY_NAME == "kloop"
+    assert reg.resolve_loop_name("kloop") == "implement-loop"
     assert reg.resolve_loop_name("engineering-work-loop") == "implement-loop"
 
 

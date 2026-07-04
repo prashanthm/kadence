@@ -65,9 +65,10 @@ def load_config(path: str | Path | None = None) -> dict[str, Any]:
     overlay = operator_overlay_path()
     # Merge the example defaults under an operator overlay (the resolved overlay path,
     # or any loop-family overlay filename <loop>[-<inst>].yaml).
-    from loop_registry import LOOPS
+    from loop_registry import LOOPS, FAMILY_NAME, LEGACY_FAMILY_NAME
 
-    _is_family_overlay = p.name == "engineering-work-loop.yaml" or any(
+    _family_overlays = {f"{FAMILY_NAME}.yaml", f"{LEGACY_FAMILY_NAME}.yaml"}
+    _is_family_overlay = p.name in _family_overlays or any(
         p.name == f"{n}.yaml" or p.name.startswith(f"{n}-") for n in LOOPS
     )
     should_merge = p == overlay or _is_family_overlay

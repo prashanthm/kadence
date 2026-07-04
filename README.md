@@ -34,7 +34,7 @@ it can see. Never by an agent's self-report.
 ## Status
 
 `v2.0.0-rc1` — a release candidate. The lean core is complete: the autonomous loop engine
-(ported clean, compliance stripped) as a four-loop family (spec-loop, implement-loop,
+(ported clean, compliance stripped) as **kloop**, a four-loop family (spec-loop, implement-loop,
 pr-review-loop, pr-comment-fix-loop), the enforcement layer (`--enforce` verify +
 `report_gate`), the 3-layer authoring skills + templates, and the GitHub board automation.
 `kadence doctor` gates every change (311 tests).
@@ -51,7 +51,7 @@ python3 scripts/doctor.py --strict # also assert the v2 cuts have landed
 ```
 standard/     the lifecycle definition (glossary, guide, project-board, roles)
 templates/    slug-named artifacts (initiative → feature, spec folder, board Actions)
-skills/       the delivery engine (4-loop family) + authoring (generate/implement/decompose)
+skills/       the delivery engine (kloop — the 4-loop family) + authoring (generate/implement/decompose)
 scripts/      the loop engine, doctor, event log, report gate, board mover
 tests/        the suite doctor runs (212)
 specs/        this repo's own specs/<feature>/ (dogfooding)

@@ -29,7 +29,7 @@ has cleared it.
 
 A team that wants engineers to **review the plan before the agent writes code** can add a
 `Ready for Spec` column and run the **spec-loop** (the spec-drafting member of the
-engineering-work-loop family). Opt-in; simple features skip it and go straight to `Ready for Dev`.
+kloop family). Opt-in; simple features skip it and go straight to `Ready for Dev`.
 
 | Status | Meaning | Set by |
 |--------|---------|--------|

@@ -96,9 +96,9 @@ spec-loop ([`spec-author`](../spec-author/SKILL.md)) authors `specs/<slug>/{spec
 and opens a **spec-only** draft PR (`spec/<n>-<slug>`, `Refs #`) → engineer merges it → card
 **auto-promotes** to `Ready for Dev` → implement-loop takes over. Opt-in; simple features skip it.
 
-### 3. Build — the autonomous loop family
+### 3. Build — the autonomous loop family (kloop)
 
-The **implement-loop** (build member of the [`engineering-work-loop`](../engineering-work-loop/SKILL.md)
+The **implement-loop** (build member of the [kloop](../engineering-work-loop/SKILL.md)
 family) picks up `Ready for Dev` issues and, per feature, works in an isolated git worktree via
 [`implement`](../implement/SKILL.md): it authors (or reads, if spec-loop already wrote it) the code-repo
 **spec folder** `specs/<feature>/{spec,plan,tasks}.md`, implements, re-runs every Loop AC `verify:` itself

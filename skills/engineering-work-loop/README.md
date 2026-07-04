@@ -1,4 +1,4 @@
-# Engineering Work Loop — Operator Guide
+# kloop (Engineering Work Loop) — Operator Guide
 
 Automation entry: [scripts/loop-automation.md](../../scripts/loop-automation.md)
 
